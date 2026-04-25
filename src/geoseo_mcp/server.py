@@ -61,11 +61,38 @@ def build_server() -> FastMCP:
                     "message": (
                         "Perplexity API key configured."
                         if cfg.perplexity_api_key
-                        else "Set GEOSEO_PERPLEXITY_API_KEY to a key from "
-                        "https://www.perplexity.ai/settings/api."
+                        else "Set GEOSEO_PERPLEXITY_API_KEY (https://www.perplexity.ai/settings/api)."
+                    ),
+                },
+                "openai": {
+                    "configured": cfg.openai_api_key is not None,
+                    "message": (
+                        f"OpenAI configured (model: {cfg.openai_model})."
+                        if cfg.openai_api_key
+                        else "Set GEOSEO_OPENAI_API_KEY (https://platform.openai.com/api-keys)."
+                    ),
+                },
+                "anthropic": {
+                    "configured": cfg.anthropic_api_key is not None,
+                    "message": (
+                        f"Anthropic configured (model: {cfg.anthropic_model})."
+                        if cfg.anthropic_api_key
+                        else "Set GEOSEO_ANTHROPIC_API_KEY (https://console.anthropic.com/settings/keys)."
+                    ),
+                },
+                "gemini": {
+                    "configured": cfg.gemini_api_key is not None,
+                    "message": (
+                        f"Gemini configured (model: {cfg.gemini_model})."
+                        if cfg.gemini_api_key
+                        else "Set GEOSEO_GEMINI_API_KEY (https://aistudio.google.com/app/apikey)."
                     ),
                 },
                 "on_page_audit": {
+                    "configured": True,
+                    "message": "Always available; needs no credentials.",
+                },
+                "llms_txt": {
                     "configured": True,
                     "message": "Always available; needs no credentials.",
                 },

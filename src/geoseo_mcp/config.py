@@ -29,6 +29,12 @@ class Config:
     indexnow_key_location: str | None
     perplexity_api_key: str | None
     perplexity_model: str
+    openai_api_key: str | None
+    openai_model: str
+    anthropic_api_key: str | None
+    anthropic_model: str
+    gemini_api_key: str | None
+    gemini_model: str
     user_agent: str
     request_timeout_s: float
     data_dir: Path
@@ -46,9 +52,15 @@ class Config:
             indexnow_key_location=os.getenv("GEOSEO_INDEXNOW_KEY_LOCATION"),
             perplexity_api_key=os.getenv("GEOSEO_PERPLEXITY_API_KEY"),
             perplexity_model=os.getenv("GEOSEO_PERPLEXITY_MODEL", "sonar"),
+            openai_api_key=os.getenv("GEOSEO_OPENAI_API_KEY"),
+            openai_model=os.getenv("GEOSEO_OPENAI_MODEL", "gpt-4o-mini"),
+            anthropic_api_key=os.getenv("GEOSEO_ANTHROPIC_API_KEY"),
+            anthropic_model=os.getenv("GEOSEO_ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929"),
+            gemini_api_key=os.getenv("GEOSEO_GEMINI_API_KEY"),
+            gemini_model=os.getenv("GEOSEO_GEMINI_MODEL", "gemini-2.5-flash"),
             user_agent=os.getenv(
                 "GEOSEO_USER_AGENT",
-                "geoseo-mcp/0.1 (+https://github.com/Rachit8484/geoseo-mcp)",
+                "geoseo-mcp/0.2 (+https://github.com/Rachit8484/geoseo-mcp)",
             ),
             request_timeout_s=float(os.getenv("GEOSEO_TIMEOUT_S", "30")),
             data_dir=data_dir,

@@ -1,4 +1,4 @@
-"""On-page + on-folder audit tools."""
+"""On-page + on-folder audit tools, plus llms.txt generator/validator."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from ..audit import on_page
+from ..audit import llms_txt, on_page
 
 
 def register(mcp: FastMCP) -> None:
@@ -83,3 +83,45 @@ def register(mcp: FastMCP) -> None:
             "most_common_findings": [{"key": k, "count": n} for k, n in top_findings],
             "per_file": per_file,
         }
+
+    @mcp.tool()
+    def generate_llms_txt(
+        folder: str,
+        site_url: str,
+        site_title: str | None = None,
+        site_summary: str | None = None,
+        pattern: str = "*.html",
+        section_strategy: str = "first_path_segment",
+        limit: int = 1000,
+    ) -> dict[str, Any]:
+        """Generate a draft ``llms.txt`` from a folder of HTML pages.
+
+        ``llms.txt`` (https://llmstxt.org) is the emerging standard for telling
+        LLM crawlers where your canonical content lives. This tool reads each
+        page's ``<title>`` and meta description, groups by URL prefix, and
+        produces spec-compliant Markdown ready to drop at ``/llms.txt``.
+
+        ``section_strategy`` controls grouping:
+            - ``first_path_segment`` (default): groups by first URL path
+              segment, e.g. all ``/blog/...`` pages under "Blog".
+            - ``flat``: a single "Pages" section.
+        """
+        return llms_txt.generate(
+            folder=folder, site_url=site_url, site_title=site_title,
+            site_summary=site_summary, pattern=pattern,
+            section_strategy=section_strategy, limit=limit,
+        )
+
+    @mcp.tool()
+    def validate_llms_txt(source: str) -> dict[str, Any]:
+        """Validate an ``llms.txt`` file (local path or URL) against the spec.
+
+        Returns parsed structure plus an ``issues`` list with line numbers for
+        any violations (missing H1, broken link syntax, non-http(s) URLs, etc).
+        """
+        try:
+            return llms_txt.validate(source)
+        except FileNotFoundError as e:
+            return {"error": str(e)}
+        except Exception as e:
+            return {"error": f"validate failed: {e}"}
