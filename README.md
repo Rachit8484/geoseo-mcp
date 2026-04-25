@@ -2,6 +2,8 @@
 
 > The only open-source MCP server that covers traditional SEO **and** Generative Engine Optimization (GEO) across Google, Bing, Yandex, and the major LLMs — in one server.
 
+[![PyPI](https://img.shields.io/pypi/v/geoseo-mcp.svg)](https://pypi.org/project/geoseo-mcp/)
+[![CI](https://github.com/Rachit8484/geoseo-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Rachit8484/geoseo-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-green.svg)](https://modelcontextprotocol.io)
@@ -52,6 +54,28 @@ git clone https://github.com/Rachit8484/geoseo-mcp.git
 cd geoseo-mcp
 pip install -e ".[dev]"
 ```
+
+## Try it without any credentials
+
+Several tools work with **zero configuration** — useful to kick the tires before you wire up any API keys.
+
+```bash
+# audit a single page
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"audit_page","arguments":{"source":"https://example.com"}}}' \
+  | uvx geoseo-mcp
+
+# audit a whole folder of HTML
+... "audit_site","arguments":{"folder":"./content"}
+# build the internal link graph
+... "internal_link_graph","arguments":{"folder":"./content","site_host":"yourdomain.com"}
+# generate llms.txt
+... "generate_llms_txt","arguments":{"folder":"./content","site_url":"https://yourdomain.com"}
+```
+
+In an MCP client (Cursor / Claude Desktop / Continue / Cline), it's even simpler — just ask:
+> "Audit my `./content` folder and tell me the 5 worst-scoring pages"
+> "Build the internal link graph and find orphan pages"
+> "Generate an llms.txt for yourdomain.com from `./content`"
 
 ## Configure your MCP client
 

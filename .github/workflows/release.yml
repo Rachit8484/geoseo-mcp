@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or commit to publish (e.g. v0.3.0). Defaults to current branch tip."
+        required: false
+        default: ""
 
 jobs:
   pypi:
@@ -15,6 +21,8 @@ jobs:
       id-token: write  # for PyPI Trusted Publishing (no API token needed)
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
