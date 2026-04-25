@@ -20,16 +20,20 @@ Every other SEO MCP picks one lane:
 | Surface | Tools |
 | --- | --- |
 | **Google Search** | GSC performance, URL inspection, sitemaps, Indexing API |
+| **Bing Webmaster** | Verified-site stats, query/page stats, URL inspect, fast submit, crawl issues |
 | **Bing / Yandex / Naver / Seznam** | IndexNow submission |
-| **LLM citations** | Perplexity, ChatGPT (web search), Claude (web search), Gemini (Google Search grounding), plus a `multi_llm_*` super-tool that fans out across all four in parallel. Grok / Google AIO planned. |
+| **Google AI Overviews** | `aio_check` + `aio_citation_check` via SerpAPI |
+| **LLM citations** | Perplexity, ChatGPT (web search), Claude (web search), Gemini (Google Search grounding), plus a `multi_llm_*` super-tool that fans out across all four in parallel |
 | **On-page** | Title / meta / heading / schema / internal-link audit + 0-100 score |
+| **Internal link graph** | Orphans, dead-ends, hubs, dangling links, TF-IDF related-page suggestions with anchor hints |
 | **`llms.txt`** | Generate from a folder of HTML, validate against the spec |
+| **Trend tracking** | Local SQLite snapshots of GSC + LLM citations + AIO; time-series trend tools |
 
 MIT licensed. Runs locally over stdio. No hosting, no API key gating, your credentials never leave your machine.
 
 ## Status
 
-**v0.2 — alpha.** Multi-LLM citation tracking shipped. See [`ROADMAP`](#roadmap).
+**v0.3 — alpha.** 36 tools across GSC, Bing Webmaster, IndexNow, ChatGPT, Claude, Gemini, Perplexity, Google AI Overviews, on-page + folder audits, `llms.txt`, internal link graph + suggestions, and local SQLite trend tracking. See [`ROADMAP`](#roadmap).
 
 ## Install
 
@@ -63,11 +67,13 @@ Add to `~/.cursor/mcp.json`:
       "args": ["geoseo-mcp"],
       "env": {
         "GEOSEO_GOOGLE_CLIENT_SECRET": "/absolute/path/to/client_secret.json",
+        "GEOSEO_BING_WEBMASTER_API_KEY": "your-bing-key",
         "GEOSEO_INDEXNOW_KEY": "your-indexnow-key",
         "GEOSEO_PERPLEXITY_API_KEY": "pplx-...",
         "GEOSEO_OPENAI_API_KEY": "sk-...",
         "GEOSEO_ANTHROPIC_API_KEY": "sk-ant-...",
-        "GEOSEO_GEMINI_API_KEY": "AIza..."
+        "GEOSEO_GEMINI_API_KEY": "AIza...",
+        "GEOSEO_SERPAPI_API_KEY": "..."
       }
     }
   }
@@ -86,11 +92,13 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
       "args": ["geoseo-mcp"],
       "env": {
         "GEOSEO_GOOGLE_CLIENT_SECRET": "/absolute/path/to/client_secret.json",
+        "GEOSEO_BING_WEBMASTER_API_KEY": "your-bing-key",
         "GEOSEO_INDEXNOW_KEY": "your-indexnow-key",
         "GEOSEO_PERPLEXITY_API_KEY": "pplx-...",
         "GEOSEO_OPENAI_API_KEY": "sk-...",
         "GEOSEO_ANTHROPIC_API_KEY": "sk-ant-...",
-        "GEOSEO_GEMINI_API_KEY": "AIza..."
+        "GEOSEO_GEMINI_API_KEY": "AIza...",
+        "GEOSEO_SERPAPI_API_KEY": "..."
       }
     }
   }
@@ -107,10 +115,12 @@ See [`examples/`](examples/) for ready-to-paste configs.
 - **OpenAI** — [API key](https://platform.openai.com/api-keys). Uses the Responses API + `web_search_preview` tool.
 - **Anthropic** — [API key](https://console.anthropic.com/settings/keys). Uses Claude with the `web_search_20250305` server-side tool.
 - **Gemini** — [API key from AI Studio](https://aistudio.google.com/app/apikey). Uses Google Search grounding (the same signal Google's AI Overviews are built on).
+- **Bing Webmaster** — [API key from Bing Webmaster Tools](https://www.bing.com/webmasters/) → Settings → API access.
+- **SerpAPI** — [API key](https://serpapi.com/manage-api-key). Free tier: 100 searches/month. Used for Google AI Overviews tracking (`aio_check`, `aio_citation_check`).
 
 All credentials are optional — tools that need a key you don't have will return a clear error, the rest still work.
 
-## Tools (v0.2)
+## Tools (v0.3 — 36 total)
 
 ### Status / discovery
 - `geoseo_status` — show which engines are configured.
@@ -118,6 +128,9 @@ All credentials are optional — tools that need a key you don't have will retur
 
 ### Google Search Console
 - `gsc_list_sites`, `gsc_performance`, `gsc_inspect_url`, `gsc_submit_sitemap`
+
+### Bing Webmaster Tools *(new in v0.3)*
+- `bing_list_sites`, `bing_query_stats`, `bing_page_stats`, `bing_url_info`, `bing_submit_url`, `bing_crawl_issues`
 
 ### Indexing
 - `indexnow_submit_url` — single URL → Bing/Yandex/Naver/Seznam/Yep.
@@ -127,22 +140,39 @@ All credentials are optional — tools that need a key you don't have will retur
 - `perplexity_query` / `perplexity_citation_check`
 - `openai_query` — ChatGPT with web search.
 - `claude_query` — Claude with server-side web search.
-- `gemini_query` — Gemini with Google Search grounding (proxy for AI Overviews).
+- `gemini_query` — Gemini with Google Search grounding.
 - **`multi_llm_query`** — fan out one question to every configured LLM in parallel.
 - **`multi_llm_citation_check`** — citation-share metrics for your domain across ChatGPT + Claude + Gemini + Perplexity in one call. *This is the headline tool.*
+
+### Google AI Overviews *(new in v0.3)*
+- `aio_check` — does AIO fire for this query? Which URLs does it cite?
+- `aio_citation_check` — AIO fire-rate + citation-share for your domain across a batch of queries.
 
 ### On-page audit
 - `audit_page` — local file or URL: title, meta, H1-H3, word count, schema, OG, freshness, GEO quotability, 0-100 score, list of findings.
 - `audit_site` — recursive audit over a folder, with worst-pages report.
 
+### Internal link graph *(new in v0.3)*
+- `internal_link_graph` — orphans, dead-ends, hub pages, dangling hrefs.
+- `suggest_internal_links` — TF-IDF related-page suggestions per file with anchor-text hints.
+
 ### llms.txt
 - `generate_llms_txt` — produce a spec-compliant `llms.txt` from a folder of HTML pages, grouped by URL prefix.
 - `validate_llms_txt` — validate an existing file/URL with line-numbered issue list.
 
+### Trend tracking *(new in v0.3 — local SQLite)*
+- `trend_init`, `trend_stats`
+- `snapshot_gsc` — persist a GSC performance pull as a timestamped snapshot.
+- `snapshot_llm_citations` — persist `multi_llm_citation_check` results.
+- `snapshot_serp_aio` — persist AIO citation results.
+- `trend_gsc` — clicks/impressions/position over time (filterable by query/page).
+- `trend_llm_citations` — citation share over time (per engine).
+
+Snapshots are append-only and stored at `$GEOSEO_DB` (default: platform user-data dir / `geoseo.sqlite`). Schedule the `snapshot_*` tools weekly to build a private time-series of your AI-search visibility — no SaaS.
+
 ## Roadmap
 
-- **v0.3** — Bing Webmaster Tools API, Yandex Webmaster API, Google AI Overviews tracking via SerpAPI/Bright Data, internal link graph + suggestions, SQLite snapshots for trend tracking.
-- **v0.4** — Vertical packs (YMYL/health, e-commerce), schema linter, broken-link prospector.
+- **v0.4** — Yandex Webmaster API, Grok citations, schema linter, broken-link prospector, vertical packs (YMYL / health / e-commerce).
 - **v1.0** — Stable API, full test coverage, optional remote (HTTP) transport.
 
 See [`docs/architecture.md`](docs/architecture.md) for the engine plug-in interface — adding a new search engine or LLM is one file.

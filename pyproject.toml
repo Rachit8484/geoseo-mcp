@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "geoseo-mcp"
-version = "0.2.0"
+version = "0.3.0"
 description = "Open-source MCP server unifying SEO + GEO across Google, Bing, Yandex, and major LLMs."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -17,9 +17,15 @@ keywords = [
     "geo",
     "aeo",
     "google-search-console",
+    "bing-webmaster",
     "indexnow",
     "llm",
+    "ai-overviews",
+    "chatgpt",
+    "claude",
+    "gemini",
     "perplexity",
+    "llms-txt",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

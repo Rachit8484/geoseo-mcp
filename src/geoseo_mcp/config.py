@@ -35,6 +35,8 @@ class Config:
     anthropic_model: str
     gemini_api_key: str | None
     gemini_model: str
+    serpapi_api_key: str | None
+    bing_webmaster_api_key: str | None
     user_agent: str
     request_timeout_s: float
     data_dir: Path
@@ -58,9 +60,11 @@ class Config:
             anthropic_model=os.getenv("GEOSEO_ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929"),
             gemini_api_key=os.getenv("GEOSEO_GEMINI_API_KEY"),
             gemini_model=os.getenv("GEOSEO_GEMINI_MODEL", "gemini-2.5-flash"),
+            serpapi_api_key=os.getenv("GEOSEO_SERPAPI_API_KEY"),
+            bing_webmaster_api_key=os.getenv("GEOSEO_BING_WEBMASTER_API_KEY"),
             user_agent=os.getenv(
                 "GEOSEO_USER_AGENT",
-                "geoseo-mcp/0.2 (+https://github.com/Rachit8484/geoseo-mcp)",
+                "geoseo-mcp/0.3 (+https://github.com/Rachit8484/geoseo-mcp)",
             ),
             request_timeout_s=float(os.getenv("GEOSEO_TIMEOUT_S", "30")),
             data_dir=data_dir,
