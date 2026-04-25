@@ -54,9 +54,9 @@ dev = [
 geoseo-mcp = "geoseo_mcp.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/your-org/geoseo-mcp"
-Repository = "https://github.com/your-org/geoseo-mcp"
-Issues = "https://github.com/your-org/geoseo-mcp/issues"
+Homepage = "https://github.com/Rachit8484/geoseo-mcp"
+Repository = "https://github.com/Rachit8484/geoseo-mcp"
+Issues = "https://github.com/Rachit8484/geoseo-mcp/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/geoseo_mcp"]

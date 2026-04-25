@@ -48,7 +48,7 @@ class Config:
             perplexity_model=os.getenv("GEOSEO_PERPLEXITY_MODEL", "sonar"),
             user_agent=os.getenv(
                 "GEOSEO_USER_AGENT",
-                "geoseo-mcp/0.1 (+https://github.com/your-org/geoseo-mcp)",
+                "geoseo-mcp/0.1 (+https://github.com/Rachit8484/geoseo-mcp)",
             ),
             request_timeout_s=float(os.getenv("GEOSEO_TIMEOUT_S", "30")),
             data_dir=data_dir,

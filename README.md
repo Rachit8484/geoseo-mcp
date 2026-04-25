@@ -44,7 +44,7 @@ pip install geoseo-mcp
 Or from source:
 
 ```bash
-git clone https://github.com/your-org/geoseo-mcp.git
+git clone https://github.com/Rachit8484/geoseo-mcp.git
 cd geoseo-mcp
 pip install -e ".[dev]"
 ```
