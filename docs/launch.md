@@ -211,7 +211,58 @@ Hey PH! I built this because every SEO MCP I tried was single-lane and every LLM
 
 ## Pre-flight checks before posting
 
-- [ ] Repo README screenshots / animated GIF of `multi_llm_citation_check` in Cursor (huge conversion lift).
-- [ ] PyPI publish — currently install path is "from source". Ship to PyPI so `uvx geoseo-mcp` actually works for outsiders.
-- [ ] Pin a Discord / Discussions tab for support.
-- [ ] First-issue labels seeded with: "Add Yandex Webmaster engine", "Add Grok engine", "Add Brave Search citations", "Embedding-based link suggester".
+### Done
+
+- [x] **GitHub Discussions enabled** — for "is this idea good", "PR proposals", and quiet support questions.
+- [x] **CI workflow** — `.github/workflows/ci.yml` runs `ruff` + `pytest` + builds the wheel + smoke-tests it on Python 3.11 and 3.12 on every push and PR. Green badge on README.
+- [x] **PyPI release workflow** — `.github/workflows/release.yml` auto-publishes to PyPI on every `v*` tag via Trusted Publishing (no API tokens in repo secrets). Also has `workflow_dispatch` so we can publish v0.3.0 without re-tagging.
+- [x] **Good-first-issues seeded** — 7 issues filed with labels (`good first issue`, `help wanted`, `engine`, `tool`, `v0.4`):
+  - #1 Add Yandex Webmaster API engine
+  - #2 Add xAI Grok citation engine
+  - #3 Embedding-based internal-link suggester
+  - #4 Add Brave Search citation engine
+  - #5 Schema.org JSON-LD linter
+  - #6 Publish to PyPI on every tag (CI/CD)
+  - #7 Broken-link prospector tool
+- [x] **`awesome-mcp-servers` PR open** — https://github.com/punkpeye/awesome-mcp-servers/pull/5383 (Marketing section, alphabetical).
+- [x] **README updates** — PyPI + CI badges, "Try it without any credentials" quickstart showing the 4 keyless tools (`audit_page`, `audit_site`, `internal_link_graph`, `generate_llms_txt`).
+
+### Still to do (in order)
+
+1. **PyPI Trusted Publishing setup** (one-time, ~5 min):
+   1. Sign in / create account at https://pypi.org → **Account settings → Publishing → Add a new pending publisher**.
+   2. Fill in:
+      - Project name: `geoseo-mcp`
+      - Owner: `Rachit8484`
+      - Repository name: `geoseo-mcp`
+      - Workflow name: `release.yml`
+      - Environment name: `pypi`
+   3. In the GitHub repo: **Settings → Environments → New environment** → name it `pypi` (no protection rules needed for now).
+   4. Trigger the publish: **Actions → release → Run workflow → ref: `v0.3.0`**. The job will build, claim the name, and publish v0.3.0.
+   5. Verify: `uvx geoseo-mcp --help` from a clean machine.
+
+2. **README screenshots / GIFs** — biggest conversion lift on HN. Three to capture:
+   - **GIF #1:** `multi_llm_citation_check` running in Cursor — the parallel-fan-out is the headline. ~10s clip showing the user prompt and the side-by-side citation results.
+   - **GIF #2:** `internal_link_graph` + `suggest_internal_links` finding the orphan and recommending 8 pages. (We already have the SoberPath data; just re-run for the recording.)
+   - **Static screenshot:** the `geoseo_status` JSON in Cursor showing all the connected engines lit up.
+   Drop them under `docs/media/` and embed in the README right after the "Try it without any credentials" section. `vhs` (https://github.com/charmbracelet/vhs) is the cleanest way to record reproducible terminal GIFs.
+
+3. **(Optional) Cut a v0.3.1 patch release** to take advantage of CI + auto-publish — pure mechanical changelog "added CI and auto-publishing". Otherwise we wait until the next real change.
+
+4. **Final sanity pass before HN post:**
+   - [ ] CI is green on `main`.
+   - [ ] `uvx geoseo-mcp` installs cleanly on a machine that doesn't have the source checked out.
+   - [ ] README's first screen (the bit above the fold) answers "what is this and what do I do with it" in 5 seconds.
+   - [ ] At least one GIF renders inline in the GitHub README preview (some browsers throttle large MP4s; use compressed GIF or APNG).
+   - [ ] You have 60–90 minutes blocked to babysit the HN thread (replies in the first 90 minutes are what determine whether it stays on the front page).
+
+## Posting day runbook
+
+- **Tuesday 9:00 AM PT** (12:00 PM ET): post Show HN. Title: `Show HN: geoseo-mcp – open-source MCP for SEO, GEO, and AI Overviews`.
+- **+15 min:** post r/mcp (lower-stakes warmup audience while HN comments build).
+- **+30 min:** post the Twitter thread.
+- **+45 min:** post r/SEO and r/bigseo (read pinned rules, add flair if required).
+- **Same day, evening:** LinkedIn post.
+- **Tuesday following week:** Product Hunt launch (only if HN feedback was net positive — PH amplifies whatever signal HN sets).
+
+Reply guidance: every comment in the first 2 hours gets a reply within 5 minutes, even if it's a one-liner. Negative feedback gets the most thoughtful answer of the thread — that's the post that builds trust. Don't argue with downvotes; either fix the thing or thank them and move on.
