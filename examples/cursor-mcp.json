@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "geoseo": {
+      "command": "uvx",
+      "args": ["geoseo-mcp"],
+      "env": {
+        "GEOSEO_GOOGLE_CLIENT_SECRET": "/absolute/path/to/client_secret.json",
+        "GEOSEO_INDEXNOW_KEY": "your-32-char-hex-key",
+        "GEOSEO_PERPLEXITY_API_KEY": "pplx-your-key"
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "geoseo-mcp"
+version = "0.1.0"
+description = "Open-source MCP server unifying SEO + GEO across Google, Bing, Yandex, and major LLMs."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "geoseo-mcp contributors" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "seo",
+    "geo",
+    "aeo",
+    "google-search-console",
+    "indexnow",
+    "llm",
+    "perplexity",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
+
+dependencies = [
+    "fastmcp>=0.4.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.7.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.2.0",
+    "google-api-python-client>=2.130.0",
+    "google-auth>=2.30.0",
+    "google-auth-oauthlib>=1.2.0",
+    "platformdirs>=4.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+]
+
+[project.scripts]
+geoseo-mcp = "geoseo_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/your-org/geoseo-mcp"
+Repository = "https://github.com/your-org/geoseo-mcp"
+Issues = "https://github.com/your-org/geoseo-mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/geoseo_mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
