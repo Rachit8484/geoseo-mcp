@@ -1,22 +1,40 @@
-"""Perplexity engine.
+"""Perplexity engine (Agent API).
 
-Perplexity returns answers WITH citations as a structured field, which is why
-it's our v0.1 LLM target: cleanest signal for citation-share metrics.
+Perplexity retired Sonar Chat Completions in favour of the Agent API
+(``POST /v1/agent``, Open Responses format). Sources come back as a typed
+``search_results`` output item, and the answer cites them with ``[n]`` /
+``[web:n]`` markers that map to each result's ``id``.
 
-API: https://docs.perplexity.ai/reference/post_chat_completions
+By default we use the ``fast`` effort preset (Perplexity's suggested
+replacement for ``sonar``). Set ``GEOSEO_PERPLEXITY_EFFORT`` to change the
+preset, or ``GEOSEO_PERPLEXITY_MODEL`` to pin a specific model
+(e.g. ``openai/gpt-5-mini``) with the ``web_search`` tool. Legacy Sonar model
+names are mapped to their recommended effort level.
+
+Docs: https://docs.perplexity.ai/docs/agent-api/quickstart
 """
 
 from __future__ import annotations
 
+import re
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
 from ..config import get_config
+from ._domains import any_match, domain_of, matches_domain, normalize_domain
 from .base import EngineError, EngineNotConfiguredError
 
-PPLX_ENDPOINT = "https://api.perplexity.ai/chat/completions"
+PPLX_ENDPOINT = "https://api.perplexity.ai/v1/agent"
+
+# https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar/how-to
+SONAR_TO_EFFORT = {
+    "sonar": "fast",
+    "sonar-pro": "fast",
+    "sonar-reasoning-pro": "low",
+    "sonar-deep-research": "high",
+}
+_MARKER_RE = re.compile(r"\[(?:web:)?(\d+)\]")
 
 
 def _require_key() -> str:
@@ -30,28 +48,40 @@ def _require_key() -> str:
     return cfg.perplexity_api_key
 
 
+def build_payload(
+    question: str,
+    model: str | None = None,
+    system_prompt: str | None = None,
+    max_tokens: int | None = None,
+) -> tuple[dict[str, Any], str]:
+    """Return ``(payload, label)`` where label is what we report as ``model``."""
+    cfg = get_config()
+    model = model or cfg.perplexity_model
+    payload: dict[str, Any] = {"input": question}
+    if model and model not in SONAR_TO_EFFORT:
+        payload["model"] = model
+        payload["tools"] = [{"type": "web_search"}]
+        label = model
+    else:
+        effort = SONAR_TO_EFFORT.get(model or "", cfg.perplexity_effort)
+        payload["effort"] = effort
+        label = f"effort:{effort}"
+    if system_prompt:
+        payload["instructions"] = system_prompt
+    if max_tokens:
+        payload["max_output_tokens"] = max_tokens
+    return payload, label
+
+
 def query(
     question: str,
     model: str | None = None,
     system_prompt: str | None = None,
-    max_tokens: int = 1024,
+    max_tokens: int | None = None,
 ) -> dict[str, Any]:
     cfg = get_config()
     api_key = _require_key()
-    model = model or cfg.perplexity_model
-
-    messages: list[dict[str, str]] = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": question})
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "max_tokens": max_tokens,
-        "return_citations": True,
-        "return_related_questions": False,
-    }
+    payload, label = build_payload(question, model, system_prompt, max_tokens)
 
     with httpx.Client(timeout=cfg.request_timeout_s) as c:
         r = c.post(
@@ -68,18 +98,63 @@ def query(
         raise EngineError(f"Perplexity {r.status_code}: {r.text[:300]}")
 
     data = r.json()
-    answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-    citations: list[str] = data.get("citations", []) or []
+    answer, citations, sources = _extract(data)
     cited_domains = sorted({_domain(u) for u in citations if u})
 
     return {
+        "engine": "perplexity",
         "question": question,
-        "model": model,
+        "model": data.get("model") or label,
         "answer": answer,
         "citations": citations,
         "cited_domains": cited_domains,
+        "sources_considered": len(sources),
         "usage": data.get("usage", {}),
     }
+
+
+def _extract(data: dict[str, Any]) -> tuple[str, list[str], list[str]]:
+    """Return ``(answer, cited_urls, all_source_urls)``.
+
+    Cited URLs are the results referenced by ``[n]`` markers. If the answer has
+    no markers we fall back to every returned source. Legacy Sonar-shaped
+    payloads (``choices`` + ``citations``) are still understood.
+    """
+    if "choices" in data:  # legacy Sonar shape
+        answer = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        urls = list(data.get("citations") or [])
+        return answer, urls, urls
+
+    text_parts: list[str] = []
+    by_id: dict[int, str] = {}
+    order: list[str] = []
+    for item in data.get("output", []) or []:
+        kind = item.get("type")
+        if kind == "search_results":
+            for res in item.get("results", []) or []:
+                url = res.get("url")
+                if not url:
+                    continue
+                if isinstance(res.get("id"), int):
+                    by_id[res["id"]] = url
+                if url not in order:
+                    order.append(url)
+        elif kind == "message":
+            for c in item.get("content", []) or []:
+                if c.get("type") in ("output_text", "text") and c.get("text"):
+                    text_parts.append(c["text"])
+                for ann in c.get("annotations", []) or []:
+                    u = ann.get("url")
+                    if u and u not in order:
+                        order.append(u)
+    answer = "".join(text_parts) or str(data.get("output_text") or "")
+
+    cited: list[str] = []
+    for m in _MARKER_RE.finditer(answer):
+        u = by_id.get(int(m.group(1)))
+        if u and u not in cited:
+            cited.append(u)
+    return answer, (cited or order), order
 
 
 def citation_check(
@@ -99,11 +174,11 @@ def citation_check(
             results.append({"question": q, "error": str(e)})
             continue
 
-        cited = target in res["cited_domains"]
+        cited = any_match(res["cited_domains"], target)
         if cited:
             cited_count += 1
         for d in res["cited_domains"]:
-            if d != target:
+            if not matches_domain(d, target):
                 competing_domains[d] = competing_domains.get(d, 0) + 1
 
         results.append(
@@ -127,16 +202,8 @@ def citation_check(
 
 
 def _domain(url: str) -> str:
-    try:
-        return _domain_only(urlparse(url).netloc or url)
-    except Exception:
-        return url
+    return domain_of(url)
 
 
 def _domain_only(host: str) -> str:
-    host = host.strip().lower()
-    if host.startswith("http://") or host.startswith("https://"):
-        host = urlparse(host).netloc
-    if host.startswith("www."):
-        host = host[4:]
-    return host
+    return normalize_domain(host)

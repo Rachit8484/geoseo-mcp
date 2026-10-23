@@ -1,9 +1,9 @@
-# Launch copy — geoseo-mcp v0.3.0
+# Launch copy — geoseo-mcp v0.4.0
 
 Ready-to-paste posts. Tone: builder-to-builder, evidence-first, no buzzword soup.
 
 Repo: https://github.com/Rachit8484/geoseo-mcp
-Release: https://github.com/Rachit8484/geoseo-mcp/releases/tag/v0.3.0
+Release: https://github.com/Rachit8484/geoseo-mcp/releases/tag/v0.4.0
 
 ---
 
@@ -29,7 +29,11 @@ What it does, in one MCP, all credentials local:
 - `llms.txt` generator + validator (the [llmstxt.org](https://llmstxt.org) spec)
 - Local SQLite snapshot store for trend tracking — schedule the `snapshot_*` tools weekly to build your own time-series of search/LLM visibility, no SaaS
 
-36 tools total. Python 3.11+, FastMCP, runs locally over stdio. MIT.
+36 tools total. Python 3.11+, FastMCP, runs locally over stdio (or streamable HTTP). MIT.
+
+Try it without any keys: `uvx geoseo-mcp audit https://yoursite.com` prints a 0–100 on-page/GEO audit in the terminal.
+
+Citation checks sample every question several times per engine (answers vary run to run), report a rate with a 95% confidence interval, and flag answers that mention your brand without linking to you.
 
 I'm dogfooding it on a small recovery site I run. The internal-link-graph tool found that the product page (sobriety tracker) had **0 inbound internal links** despite 60+ blog posts — a real "leaving SEO equity on the floor" finding. The suggester ranked 8 pages that should link to it with anchor hints derived from term overlap.
 
@@ -38,9 +42,9 @@ Adding a new search engine or LLM is one file (`engines/<name>.py`) — happy to
 Repo: https://github.com/Rachit8484/geoseo-mcp
 
 Honest weaknesses I'd love feedback on:
-- AIO tracking depends on SerpAPI (paid after 100/mo). Want to swap in a self-hosted SERP scraper but didn't want to ship something that ToS-trips Google by default.
+- AIO tracking depends on SerpAPI (paid after 250/mo). Want to swap in a self-hosted SERP scraper but didn't want to ship something that ToS-trips Google by default.
 - The link-suggester is TF-IDF, not embeddings. Cheap and deterministic but obviously dumber than a real semantic model. Pluggable.
-- No Yandex Webmaster yet (OAuth flow is hairy). Tracking it for v0.4.
+- No Yandex Webmaster yet (OAuth flow is hairy). Tracked in the issues.
 
 ---
 
@@ -48,23 +52,29 @@ Honest weaknesses I'd love feedback on:
 
 **Title:**
 
-> [Open-source] geoseo-mcp v0.3 — 36 tools across GSC, Bing, ChatGPT/Claude/Gemini/Perplexity citations, Google AI Overviews, and link-graph suggestions
+> [Open-source] geoseo-mcp v0.4 — 36 tools across GSC, Bing, ChatGPT/Claude/Gemini/Perplexity citations, Google AI Overviews, and link-graph suggestions
 
 **Body:**
 
 Hey r/mcp,
 
-Shipped v0.3.0 of `geoseo-mcp` — an MCP server that bundles the SEO + Generative Engine Optimization toolchain into one place. Everything runs locally, MIT licensed, 36 tools.
+Shipped v0.4.0 of `geoseo-mcp` — an MCP server that bundles the SEO + Generative Engine Optimization toolchain into one place. Everything runs locally, MIT licensed, 36 tools.
 
 The thing I think will be most relevant to this sub: **every API is pluggable as a one-file engine.** If you want Brave Search, You.com, Mojeek, Kagi citations, Yandex Webmaster, etc., it's `src/geoseo_mcp/engines/<name>.py` + a thin tool wrapper. PRs welcome.
 
-What's in v0.3 specifically:
+What's new in v0.4:
+- On PyPI: `uvx geoseo-mcp audit <url>` and `uvx geoseo-mcp llms-txt <url>` work with zero config
+- `multi_llm_citation_check` now samples each question N times and reports citation rate + 95% CI, unlinked brand mentions, and subdomain-aware matching
+- `GEOSEO_TOOLSETS` to expose only the tool groups you need
+- Optional streamable HTTP transport and Playwright rendering for JS-heavy pages
+
+From v0.3:
 - Google AI Overviews tracking (via SerpAPI)
 - Bing Webmaster Tools (single API key, no OAuth)
 - Internal link graph + TF-IDF related-page suggester
 - Local SQLite snapshot store for trends — `snapshot_gsc`, `snapshot_llm_citations`, `snapshot_serp_aio`, then read back with `trend_*` tools
 
-What was already in v0.1/v0.2:
+Earlier:
 - GSC (perf / URL inspect / sitemaps)
 - IndexNow (Bing/Yandex/Naver/Seznam)
 - Per-LLM citation tools for Perplexity, ChatGPT, Claude, Gemini
@@ -75,7 +85,8 @@ What was already in v0.1/v0.2:
 Configure once, ask Claude/Cursor/whatever: "What's our citation share in ChatGPT vs Claude vs Gemini for these 30 buyer questions, and how is that trending week-over-week?" — and it's one tool call.
 
 ```
-uvx geoseo-mcp
+uvx geoseo-mcp audit https://yoursite.com     # no keys needed
+npx @modelcontextprotocol/inspector uvx geoseo-mcp
 ```
 
 Repo: https://github.com/Rachit8484/geoseo-mcp
@@ -92,7 +103,7 @@ Would love bug reports, missing-engine PRs, or "your prompt patterns for `multi_
 
 **Body:**
 
-Hey, I got tired of Profound / Otterly / Peec / [pick your $99-$500/mo SaaS] gating "track me in ChatGPT" behind paywalls and hiding the methodology, so I built an open-source alternative.
+Hey, I got tired of Profound / Otterly / Peec / [pick your $99-$500/mo SaaS] gating "track me in ChatGPT" behind paywalls and hiding the methodology, so I built an open-source take on it.
 
 It's an MCP server (Model Context Protocol — works with Claude Desktop, Cursor, Continue, Cline, anything that speaks MCP). MIT, runs locally, 36 tools.
 
@@ -109,7 +120,7 @@ What you get for free:
 Costs:
 - The MCP itself: free
 - LLM API calls: ~$0.01–$0.05/query depending on engine
-- SerpAPI for AIO: free for 100 searches/mo, then paid
+- SerpAPI for AIO: free for 250 searches/mo, then paid
 
 Repo: https://github.com/Rachit8484/geoseo-mcp
 
@@ -159,9 +170,9 @@ Happy to answer questions about how the AIO citation methodology works, how to s
 
 > 7/ Why I built it: every existing SEO MCP I found was single-lane (GSC only, GEO scoring only, vendor-coupled). Every "track me in ChatGPT" SaaS is closed-source and $99-$500/mo. So I made the union, MIT.
 
-> 8/ One-liner to install:
+> 8/ Try it with no API keys:
 >
-> `uvx geoseo-mcp`
+> `uvx geoseo-mcp audit https://yoursite.com`
 >
 > https://github.com/Rachit8484/geoseo-mcp
 >
@@ -173,11 +184,11 @@ Happy to answer questions about how the AIO citation methodology works, how to s
 
 > The "I'm not getting cited in ChatGPT" anxiety has spawned a whole new SaaS category — Profound, Otterly, Peec, Goodie. They charge $99–$500/month to tell you the same thing: which queries your domain shows up in across the major LLMs.
 >
-> I built an open-source alternative. MIT, local, free. It's an MCP server, so it plugs straight into Claude Desktop / Cursor / any MCP-compatible AI agent.
+> I built an open-source take on it. MIT, local, free. It's an MCP server, so it plugs straight into Claude Desktop / Cursor / any MCP-compatible AI agent.
 >
 > Beyond LLM citation tracking, it also covers Google Search Console, Bing Webmaster, IndexNow, Google AI Overviews (the on-SERP version of LLM optimization), on-page SEO audits, internal-link analysis with related-page suggestions, the `llms.txt` standard, and a local SQLite snapshot store so you can build your own week-over-week visibility trends without paying anyone.
 >
-> 36 tools total. v0.3.0 just shipped.
+> 36 tools total. v0.4.0 just shipped, now on PyPI.
 >
 > If you're a tech SEO, an in-house team that doesn't want yet another SaaS subscription, or a developer building agentic SEO workflows — this is for you.
 >
@@ -191,10 +202,10 @@ Happy to answer questions about how the AIO citation methodology works, how to s
 
 **Tagline:** Open-source MCP for SEO + GEO across Google, Bing, and the major LLMs.
 
-**Description:** geoseo-mcp is a free, open-source MCP server that brings GSC, Bing Webmaster, IndexNow, ChatGPT/Claude/Gemini/Perplexity citation tracking, Google AI Overviews monitoring, on-page audits, internal link graphs, and `llms.txt` tooling into one stdio server. Local-first, MIT, 36 tools.
+**Description:** geoseo-mcp is a free, open-source MCP server that brings GSC, Bing Webmaster, IndexNow, ChatGPT/Claude/Gemini/Perplexity citation tracking, Google AI Overviews monitoring, on-page audits, internal link graphs, and `llms.txt` tooling into one server. Local-first, MIT, 36 tools.
 
 **First comment from maker:**
-Hey PH! I built this because every SEO MCP I tried was single-lane and every LLM-citation SaaS was closed and expensive. The headline feature is `multi_llm_citation_check` — fans out one batch of buyer questions to ChatGPT, Claude, Gemini, and Perplexity in parallel and reports per-engine citation share for your domain. Combined with the new `aio_citation_check` for Google AI Overviews, you get the full "where am I being cited in 2026" picture in two tool calls. Happy to answer anything!
+Hey PH! I built this because every SEO MCP I tried was single-lane and every LLM-citation SaaS was closed and expensive. The headline feature is `multi_llm_citation_check` — fans out one batch of buyer questions to ChatGPT, Claude, Gemini, and Perplexity in parallel and reports per-engine citation share for your domain. Combined with `aio_citation_check` for Google AI Overviews, you get the full "where am I being cited in 2026" picture in two tool calls. Happy to answer anything!
 
 ---
 
@@ -214,8 +225,8 @@ Hey PH! I built this because every SEO MCP I tried was single-lane and every LLM
 ### Done
 
 - [x] **GitHub Discussions enabled** — for "is this idea good", "PR proposals", and quiet support questions.
-- [x] **CI workflow** — `.github/workflows/ci.yml` runs `ruff` + `pytest` + builds the wheel + smoke-tests it on Python 3.11 and 3.12 on every push and PR. Green badge on README.
-- [x] **PyPI release workflow** — `.github/workflows/release.yml` auto-publishes to PyPI on every `v*` tag via Trusted Publishing (no API tokens in repo secrets). Also has `workflow_dispatch` so we can publish v0.3.0 without re-tagging.
+- [x] **CI workflow** — `.github/workflows/ci.yml` runs `ruff` + `pytest` + builds the wheel + smoke-tests it on Python 3.11, 3.12 and 3.13 on every push and PR. Green badge on README.
+- [x] **PyPI release workflow** — `.github/workflows/release.yml` auto-publishes to PyPI on every `v*` tag via Trusted Publishing (no API tokens in repo secrets). Also has `workflow_dispatch` to publish an existing tag.
 - [x] **Good-first-issues seeded** — 7 issues filed with labels (`good first issue`, `help wanted`, `engine`, `tool`, `v0.4`):
   - #1 Add Yandex Webmaster API engine
   - #2 Add xAI Grok citation engine
@@ -225,31 +236,33 @@ Hey PH! I built this because every SEO MCP I tried was single-lane and every LLM
   - #6 Publish to PyPI on every tag (CI/CD)
   - #7 Broken-link prospector tool
 - [x] **`awesome-mcp-servers` PR open** — https://github.com/punkpeye/awesome-mcp-servers/pull/5383 (Marketing section, alphabetical).
-- [x] **README updates** — PyPI + CI badges, "Try it without any credentials" quickstart showing the 4 keyless tools (`audit_page`, `audit_site`, `internal_link_graph`, `generate_llms_txt`).
+- [x] **README updates** — PyPI + CI badges, keyless CLI quickstart, Cursor install button, `claude mcp add`, cost table.
 
 ### Still to do (in order)
 
 1. **PyPI Trusted Publishing setup** (one-time, ~5 min):
-   1. Sign in / create account at https://pypi.org → **Account settings → Publishing → Add a new pending publisher**.
+   1. Sign in at https://pypi.org → **Account settings → Publishing → Add a new pending publisher** (GitHub tab).
    2. Fill in:
-      - Project name: `geoseo-mcp`
+      - PyPI project name: `geoseo-mcp`
       - Owner: `Rachit8484`
       - Repository name: `geoseo-mcp`
       - Workflow name: `release.yml`
       - Environment name: `pypi`
-   3. In the GitHub repo: **Settings → Environments → New environment** → name it `pypi` (no protection rules needed for now).
-   4. Trigger the publish: **Actions → release → Run workflow → ref: `v0.3.0`**. The job will build, claim the name, and publish v0.3.0.
-   5. Verify: `uvx geoseo-mcp --help` from a clean machine.
+   3. In the GitHub repo: **Settings → Environments → New environment** → name it `pypi` (optionally require a reviewer).
+   4. Tag and push: `git tag v0.4.0 && git push origin v0.4.0`. The workflow checks the tag matches the package version, runs lint + tests, builds, smoke-tests the wheel and publishes. (Or **Actions → release → Run workflow** with ref `v0.4.0`.)
+   5. Verify from a clean machine: `uvx geoseo-mcp --version` and `uvx geoseo-mcp audit https://example.com`.
 
-2. **README screenshots / GIFs** — biggest conversion lift on HN. Three to capture:
+2. **MCP Registry** (after PyPI is live): install `mcp-publisher` (https://github.com/modelcontextprotocol/registry), then `mcp-publisher login github` and `mcp-publisher publish` from the repo root. It reads `server.json`; PyPI ownership is verified through the `mcp-name:` marker in the README, which ships in the package description.
+
+3. **Glama / Smithery**: Glama builds from the `Dockerfile`; claim the server on glama.ai. Smithery no longer reads `smithery.yaml`; it lists either a public streamable-HTTP URL or an MCPB bundle for local stdio servers (https://smithery.ai/docs/build/publish), so list it there once one of those exists.
+
+4. **README screenshots / GIFs** — biggest conversion lift on HN. Three to capture:
    - **GIF #1:** `multi_llm_citation_check` running in Cursor — the parallel-fan-out is the headline. ~10s clip showing the user prompt and the side-by-side citation results.
    - **GIF #2:** `internal_link_graph` + `suggest_internal_links` finding the orphan and recommending 8 pages. (We already have the SoberPath data; just re-run for the recording.)
    - **Static screenshot:** the `geoseo_status` JSON in Cursor showing all the connected engines lit up.
-   Drop them under `docs/media/` and embed in the README right after the "Try it without any credentials" section. `vhs` (https://github.com/charmbracelet/vhs) is the cleanest way to record reproducible terminal GIFs.
+   Drop them under `docs/media/` and embed in the README where the `TODO: demo GIF` comment is. `vhs` (https://github.com/charmbracelet/vhs) is the cleanest way to record reproducible terminal GIFs.
 
-3. **(Optional) Cut a v0.3.1 patch release** to take advantage of CI + auto-publish — pure mechanical changelog "added CI and auto-publishing". Otherwise we wait until the next real change.
-
-4. **Final sanity pass before HN post:**
+5. **Final sanity pass before HN post:**
    - [ ] CI is green on `main`.
    - [ ] `uvx geoseo-mcp` installs cleanly on a machine that doesn't have the source checked out.
    - [ ] README's first screen (the bit above the fold) answers "what is this and what do I do with it" in 5 seconds.

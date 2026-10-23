@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "geoseo": {
+      "command": "uvx",
+      "args": ["geoseo-mcp"],
+      "env": {
+        "GEOSEO_TOOLSETS": "audit,graph"
+      }
+    }
+  }
+}

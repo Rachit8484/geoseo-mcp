@@ -13,11 +13,11 @@ API docs: https://serpapi.com/google-ai-overviews
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
 from ..config import get_config
+from ._domains import any_match, domain_of, matches_domain
 from .base import EngineError, EngineNotConfiguredError
 
 SERPAPI_ENDPOINT = "https://serpapi.com/search.json"
@@ -35,14 +35,7 @@ def _require_key() -> str:
 
 
 def _domain(url: str) -> str:
-    try:
-        host = urlparse(url).netloc or url
-    except Exception:
-        return url
-    host = host.lower()
-    if host.startswith("www."):
-        host = host[4:]
-    return host
+    return domain_of(url)
 
 
 def aio_check(
@@ -138,13 +131,13 @@ def aio_citation_check(queries: list[str], target_domain: str) -> dict[str, Any]
         except EngineError as e:
             per_query.append({"query": q, "error": str(e)})
             continue
-        is_cited = target in res["cited_domains"]
+        is_cited = any_match(res["cited_domains"], target)
         if res["aio_present"]:
             fired += 1
             if is_cited:
                 cited += 1
             for d in res["cited_domains"]:
-                if d != target:
+                if not matches_domain(d, target):
                     competitors[d] = competitors.get(d, 0) + 1
         per_query.append({
             "query": q,

@@ -1,3 +1,3 @@
-"""geoseo-mcp: Open-source MCP server unifying SEO + GEO across Google, Bing, Yandex, and LLMs."""
+"""geoseo-mcp: open-source MCP server for SEO + GEO (AI search visibility)."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

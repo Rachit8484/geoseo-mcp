@@ -1,0 +1,85 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Rachit8484/geoseo-mcp",
+  "title": "geoseo-mcp",
+  "description": "SEO + GEO: Search Console, Bing, IndexNow, AI Overviews and LLM citation tracking.",
+  "repository": {
+    "url": "https://github.com/Rachit8484/geoseo-mcp",
+    "source": "github"
+  },
+  "version": "0.4.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "geoseo-mcp",
+      "version": "0.4.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GEOSEO_OPENAI_API_KEY",
+          "description": "OpenAI API key for ChatGPT citation checks",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_ANTHROPIC_API_KEY",
+          "description": "Anthropic API key for Claude citation checks",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_GEMINI_API_KEY",
+          "description": "Gemini API key for Google Search grounded checks",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_PERPLEXITY_API_KEY",
+          "description": "Perplexity API key",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_SERPAPI_API_KEY",
+          "description": "SerpAPI key for Google AI Overviews tracking",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_BING_WEBMASTER_API_KEY",
+          "description": "Bing Webmaster Tools API key",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_INDEXNOW_KEY",
+          "description": "IndexNow key hosted at https://yourdomain.com/<key>.txt",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_GOOGLE_CLIENT_SECRET",
+          "description": "Path to a Google OAuth client_secret.json for Search Console",
+          "isRequired": false,
+          "format": "filepath"
+        },
+        {
+          "name": "GEOSEO_TOOLSETS",
+          "description": "Comma-separated toolsets to expose (default: all)",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

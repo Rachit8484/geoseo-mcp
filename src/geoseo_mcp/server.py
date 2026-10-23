@@ -7,6 +7,9 @@ keeping `server.py` declarative.
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterable
+
 from fastmcp import FastMCP
 
 from . import __version__
@@ -21,8 +24,46 @@ from .tools import (
     trend_tools,
 )
 
+TOOLSETS = {
+    "gsc": gsc_tools,
+    "bing": bing_tools,
+    "indexing": indexing_tools,
+    "llm": llm_tools,
+    "aio": serpapi_tools,
+    "audit": audit_tools,
+    "graph": graph_tools,
+    "trend": trend_tools,
+}
 
-def build_server() -> FastMCP:
+
+def resolve_toolsets(value: str | Iterable[str] | None = None) -> list[str]:
+    """Parse ``GEOSEO_TOOLSETS`` (comma-separated). Empty or ``all`` = everything."""
+    if value is None:
+        value = os.getenv("GEOSEO_TOOLSETS", "")
+    names = (
+        [v.strip().lower() for v in value.split(",")]
+        if isinstance(value, str)
+        else [v.strip().lower() for v in value]
+    )
+    names = [n for n in names if n]
+    if not names or "all" in names:
+        return list(TOOLSETS)
+    unknown = sorted(set(names) - set(TOOLSETS))
+    if unknown:
+        raise ValueError(
+            f"Unknown GEOSEO_TOOLSETS value(s): {', '.join(unknown)}. "
+            f"Valid: {', '.join(TOOLSETS)} (or 'all')."
+        )
+    return [n for n in TOOLSETS if n in names]
+
+
+def build_server(toolsets: str | Iterable[str] | None = None) -> FastMCP:
+    """Build the server. ``toolsets`` overrides ``GEOSEO_TOOLSETS``.
+
+    ``geoseo_status`` is always registered; everything else can be trimmed so
+    clients with tight tool limits only see what you use.
+    """
+    enabled = resolve_toolsets(toolsets)
     mcp = FastMCP(
         name="geoseo-mcp",
         instructions=(
@@ -50,6 +91,7 @@ def build_server() -> FastMCP:
         cfg = get_config()
         return {
             "version": __version__,
+            "toolsets": enabled,
             "engines": {
                 "google_search_console": {
                     "configured": cfg.google_client_secret is not None,
@@ -72,7 +114,8 @@ def build_server() -> FastMCP:
                 "perplexity": {
                     "configured": cfg.perplexity_api_key is not None,
                     "message": (
-                        "Perplexity API key configured."
+                        "Perplexity configured (Agent API, "
+                        f"{cfg.perplexity_model or 'effort ' + cfg.perplexity_effort})."
                         if cfg.perplexity_api_key
                         else "Set GEOSEO_PERPLEXITY_API_KEY (https://www.perplexity.ai/settings/api)."
                     ),
@@ -140,13 +183,7 @@ def build_server() -> FastMCP:
             },
         }
 
-    gsc_tools.register(mcp)
-    bing_tools.register(mcp)
-    indexing_tools.register(mcp)
-    llm_tools.register(mcp)
-    serpapi_tools.register(mcp)
-    audit_tools.register(mcp)
-    graph_tools.register(mcp)
-    trend_tools.register(mcp)
+    for name in enabled:
+        TOOLSETS[name].register(mcp)
 
     return mcp

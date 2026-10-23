@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12"]
+        python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
 
@@ -41,3 +41,4 @@ jobs:
           assert len(tools) >= 36, f'expected >=36 tools, got {len(tools)}'
           print(f'OK: {len(tools)} tools registered')
           "
+          uv run --isolated --no-project --with ./dist/geoseo_mcp-*.whl geoseo-mcp --version

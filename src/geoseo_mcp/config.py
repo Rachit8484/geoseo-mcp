@@ -12,6 +12,8 @@ from pathlib import Path
 
 from platformdirs import user_data_dir
 
+from . import __version__
+
 APP_NAME = "geoseo-mcp"
 
 
@@ -28,7 +30,8 @@ class Config:
     indexnow_key: str | None
     indexnow_key_location: str | None
     perplexity_api_key: str | None
-    perplexity_model: str
+    perplexity_model: str | None
+    perplexity_effort: str
     openai_api_key: str | None
     openai_model: str
     anthropic_api_key: str | None
@@ -37,6 +40,8 @@ class Config:
     gemini_model: str
     serpapi_api_key: str | None
     bing_webmaster_api_key: str | None
+    citation_samples: int
+    max_concurrency: int
     user_agent: str
     request_timeout_s: float
     data_dir: Path
@@ -53,18 +58,21 @@ class Config:
             indexnow_key=os.getenv("GEOSEO_INDEXNOW_KEY"),
             indexnow_key_location=os.getenv("GEOSEO_INDEXNOW_KEY_LOCATION"),
             perplexity_api_key=os.getenv("GEOSEO_PERPLEXITY_API_KEY"),
-            perplexity_model=os.getenv("GEOSEO_PERPLEXITY_MODEL", "sonar"),
+            perplexity_model=os.getenv("GEOSEO_PERPLEXITY_MODEL") or None,
+            perplexity_effort=os.getenv("GEOSEO_PERPLEXITY_EFFORT", "fast"),
             openai_api_key=os.getenv("GEOSEO_OPENAI_API_KEY"),
-            openai_model=os.getenv("GEOSEO_OPENAI_MODEL", "gpt-4o-mini"),
+            openai_model=os.getenv("GEOSEO_OPENAI_MODEL", "gpt-5-mini"),
             anthropic_api_key=os.getenv("GEOSEO_ANTHROPIC_API_KEY"),
-            anthropic_model=os.getenv("GEOSEO_ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929"),
+            anthropic_model=os.getenv("GEOSEO_ANTHROPIC_MODEL", "claude-sonnet-5-5"),
             gemini_api_key=os.getenv("GEOSEO_GEMINI_API_KEY"),
-            gemini_model=os.getenv("GEOSEO_GEMINI_MODEL", "gemini-2.5-flash"),
+            gemini_model=os.getenv("GEOSEO_GEMINI_MODEL", "gemini-3.5-flash-lite"),
             serpapi_api_key=os.getenv("GEOSEO_SERPAPI_API_KEY"),
             bing_webmaster_api_key=os.getenv("GEOSEO_BING_WEBMASTER_API_KEY"),
+            citation_samples=int(os.getenv("GEOSEO_CITATION_SAMPLES", "3")),
+            max_concurrency=int(os.getenv("GEOSEO_MAX_CONCURRENCY", "8")),
             user_agent=os.getenv(
                 "GEOSEO_USER_AGENT",
-                "geoseo-mcp/0.3 (+https://github.com/Rachit8484/geoseo-mcp)",
+                f"geoseo-mcp/{__version__} (+https://github.com/Rachit8484/geoseo-mcp)",
             ),
             request_timeout_s=float(os.getenv("GEOSEO_TIMEOUT_S", "30")),
             data_dir=data_dir,
@@ -79,3 +87,9 @@ def get_config() -> Config:
     if _cached is None:
         _cached = Config.from_env()
     return _cached
+
+
+def reset_config() -> None:
+    """Drop the cached config (tests, or after changing env vars at runtime)."""
+    global _cached
+    _cached = None
