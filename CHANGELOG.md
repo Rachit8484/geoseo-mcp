@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 — unreleased
+## 0.4.0 — 2026-10-23
 
 **The launch-readiness release.** Ready for PyPI, usable without any API keys.
 
