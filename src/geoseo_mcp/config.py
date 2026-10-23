@@ -45,6 +45,7 @@ class Config:
     bing_webmaster_api_key: str | None
     citation_samples: int
     max_concurrency: int
+    yandex_oauth_token: str | None
     user_agent: str
     request_timeout_s: float
     data_dir: Path
@@ -76,6 +77,7 @@ class Config:
             bing_webmaster_api_key=os.getenv("GEOSEO_BING_WEBMASTER_API_KEY"),
             citation_samples=int(os.getenv("GEOSEO_CITATION_SAMPLES", "3")),
             max_concurrency=int(os.getenv("GEOSEO_MAX_CONCURRENCY", "8")),
+            yandex_oauth_token=os.getenv("GEOSEO_YANDEX_OAUTH_TOKEN"),
             user_agent=os.getenv(
                 "GEOSEO_USER_AGENT",
                 f"geoseo-mcp/{__version__} (+https://github.com/Rachit8484/geoseo-mcp)",
