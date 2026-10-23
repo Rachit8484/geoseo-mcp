@@ -7,7 +7,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from ..audit import llms_txt, on_page
+from ..audit import external_links, llms_txt, on_page
 
 
 def register(mcp: FastMCP) -> None:
@@ -47,6 +47,39 @@ def register(mcp: FastMCP) -> None:
         offenders quickly.
         """
         return audit_folder(folder, pattern=pattern, limit=limit)
+
+    @mcp.tool()
+    async def find_broken_external_links(
+        folder: str,
+        pattern: str = "*.html",
+        site_host: str | None = None,
+        timeout: float = 10.0,
+        concurrency: int = 20,
+        cache_days: float = 7.0,
+        include_ok: bool = False,
+        max_urls: int = 2000,
+    ) -> dict[str, Any]:
+        """Find dead, redirected, or flaky outbound links across a folder of HTML.
+
+        Every external ``<a href>`` is collected (``mailto:``, ``tel:``,
+        ``javascript:`` and in-page anchors are skipped) and each unique URL is
+        checked once with HEAD, falling back to GET for servers that refuse
+        HEAD. Results are grouped as ``ok`` / ``redirect`` / ``client_error`` /
+        ``server_error`` / ``timeout`` / ``dns_fail`` / ``error``, and every
+        non-ok link lists the pages it appears on plus a suggested action.
+
+        ``site_host`` (e.g. ``"example.com"``) marks absolute links to your own
+        site as internal so they're skipped. Results are cached locally for
+        ``cache_days`` (set 0 to force a fresh check); timeouts are never cached.
+        """
+        try:
+            return await external_links.find_broken_async(
+                folder, pattern=pattern, timeout=timeout, concurrency=concurrency,
+                site_host=site_host, cache_ttl_s=cache_days * 86400,
+                include_ok=include_ok, max_urls=max_urls,
+            )
+        except FileNotFoundError as e:
+            return {"error": str(e)}
 
     @mcp.tool()
     def generate_llms_txt(
