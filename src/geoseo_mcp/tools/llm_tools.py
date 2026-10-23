@@ -10,7 +10,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from ..engines import anthropic, gemini, grok, multi_llm, openai, perplexity
+from ..engines import anthropic, brave, gemini, grok, multi_llm, openai, perplexity
 from ..engines.base import EngineError, EngineNotConfiguredError
 
 
@@ -114,6 +114,20 @@ def register(mcp: FastMCP) -> None:
         except (EngineNotConfiguredError, EngineError) as e:
             return {"error": str(e)}
 
+    # --- Brave Answers -------------------------------------------------------
+    @mcp.tool()
+    def brave_query(question: str, country: str = "us", language: str = "en") -> dict[str, Any]:
+        """Ask Brave's AI Answers (grounded in Brave Search); return answer + cited URLs.
+
+        Brave runs its own independent web index, so it is a useful extra
+        signal next to Google/Bing-backed engines. Requires the Brave Answers
+        plan (``GEOSEO_BRAVE_API_KEY``).
+        """
+        try:
+            return brave.query(question=question, country=country, language=language)
+        except (EngineNotConfiguredError, EngineError) as e:
+            return {"error": str(e)}
+
     # --- Multi-engine --------------------------------------------------------
     @mcp.tool()
     def multi_llm_query(
@@ -121,7 +135,7 @@ def register(mcp: FastMCP) -> None:
     ) -> dict[str, Any]:
         """Ask the same question to all (or selected) configured LLM engines in parallel.
 
-        ``engines``: optional subset of ``["perplexity","openai","anthropic","gemini","grok"]``.
+        ``engines``: optional subset of ``["perplexity","openai","anthropic","gemini","grok","brave"]``.
         Default: every engine with credentials configured (see ``geoseo_status``).
         Engines that error are reported per-engine and don't block the others.
         """
@@ -142,7 +156,7 @@ def register(mcp: FastMCP) -> None:
         """How often each configured LLM cites (or mentions) ``target_domain``.
 
         The headline GEO/AEO tool. Feed it your top 20-50 buyer questions and get
-        a per-engine breakdown for ChatGPT/Claude/Gemini/Perplexity/Grok:
+        a per-engine breakdown for ChatGPT/Claude/Gemini/Perplexity/Grok/Brave:
 
         - ``citation_rate`` (+ 95% interval): share of answers linking to your
           domain or any subdomain of it.
