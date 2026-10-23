@@ -70,7 +70,7 @@ def build_server(toolsets: str | Iterable[str] | None = None) -> FastMCP:
             "Unified SEO + GEO toolkit. Use `gsc_*` for Google Search Console, "
             "`bing_*` for Bing Webmaster, `indexnow_*` to notify search engines, "
             "`*_query`/`multi_llm_*` to track LLM citations across "
-            "ChatGPT/Claude/Gemini/Perplexity, `aio_*` for Google AI Overviews "
+            "ChatGPT/Claude/Gemini/Perplexity/Grok, `aio_*` for Google AI Overviews "
             "(via SerpAPI), `audit_*` for on-page checks, "
             "`internal_link_graph`/`suggest_internal_links` for site structure, "
             "and `snapshot_*`/`trend_*` for local SQLite-backed time-series. "
@@ -142,6 +142,14 @@ def build_server(toolsets: str | Iterable[str] | None = None) -> FastMCP:
                         f"Gemini configured (model: {cfg.gemini_model})."
                         if cfg.gemini_api_key
                         else "Set GEOSEO_GEMINI_API_KEY (https://aistudio.google.com/app/apikey)."
+                    ),
+                },
+                "grok": {
+                    "configured": cfg.grok_api_key is not None,
+                    "message": (
+                        f"xAI Grok configured (model: {cfg.grok_model})."
+                        if cfg.grok_api_key
+                        else "Set GEOSEO_XAI_API_KEY (https://console.x.ai)."
                     ),
                 },
                 "bing_webmaster": {
