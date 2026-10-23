@@ -10,6 +10,9 @@ Two tables — both append-only, one row per metric per snapshot.
     captured_at | run_id | engine | target_domain | question | cited
     cited_domains_json | answer_excerpt
 
+``link_check_cache`` is a small key/value cache (one row per external URL)
+used by the broken-link prospector so repeat runs skip fresh results.
+
 The DB lives at ``$GEOSEO_DB`` (default: platform user-data dir / ``geoseo.sqlite``).
 We never modify previous rows; trends are computed by comparing snapshots
 captured at different ``captured_at`` timestamps.
@@ -20,6 +23,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import time
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -83,6 +87,13 @@ _DDL = [
     """
     CREATE INDEX IF NOT EXISTS llm_idx_run
       ON llm_citation_snapshots(run_id)
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS link_check_cache (
+        url TEXT PRIMARY KEY,
+        checked_at REAL NOT NULL,
+        result_json TEXT NOT NULL
+    )
     """,
 ]
 
@@ -292,3 +303,39 @@ def stats() -> dict[str, Any]:
             "rows": llm["c"], "domains": llm["d"], "oldest": llm["a"], "newest": llm["b"],
         },
     }
+
+
+def link_cache_get(urls: list[str], max_age_s: float) -> dict[str, dict[str, Any]]:
+    """Return cached link-check results younger than ``max_age_s`` seconds."""
+    if not urls or max_age_s <= 0:
+        return {}
+    cutoff = time.time() - max_age_s
+    out: dict[str, dict[str, Any]] = {}
+    with _connect() as conn:
+        _ensure_schema(conn)
+        for i in range(0, len(urls), 500):
+            chunk = urls[i : i + 500]
+            marks = ",".join("?" * len(chunk))
+            rows = conn.execute(
+                f"SELECT url, result_json FROM link_check_cache "
+                f"WHERE checked_at >= ? AND url IN ({marks})",
+                (cutoff, *chunk),
+            ).fetchall()
+            for r in rows:
+                out[r["url"]] = json.loads(r["result_json"])
+    return out
+
+
+def link_cache_put(results: dict[str, dict[str, Any]]) -> None:
+    """Upsert link-check results keyed by URL."""
+    if not results:
+        return
+    now = time.time()
+    with _connect() as conn:
+        _ensure_schema(conn)
+        conn.executemany(
+            "INSERT OR REPLACE INTO link_check_cache(url, checked_at, result_json) "
+            "VALUES (?, ?, ?)",
+            [(u, now, json.dumps(r)) for u, r in results.items()],
+        )
+        conn.commit()
