@@ -109,7 +109,7 @@ Every key is optional; drop the ones you don't have. Other clients (Continue, Cl
 
 Then just ask:
 
-> "Which of ChatGPT, Claude, Gemini and Perplexity cite acme.com for 'best CRM for startups'? Run 3 samples each."
+> "Which of ChatGPT, Claude, Gemini, Perplexity and Grok cite acme.com for 'best CRM for startups'? Run 3 samples each."
 > "Audit my `./content` folder and show the 5 worst pages."
 > "Build the internal link graph and find orphan pages."
 
@@ -151,6 +151,7 @@ Approximate list prices as of October 2026; check each provider's pricing page b
 | Claude ([pricing](https://docs.anthropic.com/en/docs/about-claude/pricing)) | Messages API + `web_search` tool | $10 / 1k searches + tokens |
 | Gemini ([pricing](https://ai.google.dev/gemini-api/docs/pricing)) | `gemini-3.5-flash-lite` + Google Search grounding | 5,000 free grounded requests / month, then $14 / 1k + tokens |
 | Perplexity ([pricing](https://docs.perplexity.ai/docs/getting-started/pricing)) | Agent API, `fast` preset | ~$2.50 / 1k searches + tokens |
+| Grok ([pricing](https://docs.x.ai/docs/models)) | Responses API, `grok-4.3` + `web_search` | per-token + per-search-call pricing |
 | Brave ([pricing](https://api-dashboard.search.brave.com/documentation/services/answers)) | Answers API, streaming with citations | ~$4 / 1k searches + $5 / M tokens |
 | Google AI Overviews ([pricing](https://serpapi.com/pricing)) | SerpAPI | 250 free searches / month, then plan pricing |
 
@@ -233,7 +234,7 @@ Snapshots are append-only and stored at `$GEOSEO_DB`. Schedule the `snapshot_*` 
 
 ## Roadmap
 
-Tracked in [issues](https://github.com/Rachit8484/geoseo-mcp/issues): broken-link prospector, schema linter, Grok and Brave citation engines, embedding-based link suggestions, Yandex Webmaster.
+Tracked in [issues](https://github.com/Rachit8484/geoseo-mcp/issues). Shipped in 0.4: broken-link prospector, schema linter, Grok and Brave citation engines, embedding-based link suggestions, Yandex Webmaster.
 
 ## Contributing
 

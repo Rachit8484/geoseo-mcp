@@ -31,6 +31,7 @@
 - `snapshot_llm_citations` accepts `samples`.
 - Packaging: SPDX license metadata, Python 3.13 classifier, `fastmcp>=3,<4`, user agent derived from the package version.
 - Release workflow: checks the tag matches the package version, runs lint + tests, smoke-tests the wheel, then publishes via PyPI Trusted Publishing from the `pypi` environment.
+- `server.json` lists the new `GEOSEO_XAI_API_KEY`, `GEOSEO_BRAVE_API_KEY` and `GEOSEO_YANDEX_OAUTH_TOKEN` variables.
 - README rewritten around the keyless quickstart, with client install snippets and a rough cost table.
 
 ## 0.3.0 — 2026-04-25

@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Rachit8484/geoseo-mcp",
   "title": "geoseo-mcp",
-  "description": "SEO + GEO: Search Console, Bing, IndexNow, AI Overviews and LLM citation tracking.",
+  "description": "SEO + GEO: Search Console, Bing, Yandex, IndexNow, AI Overviews and LLM citation tracking.",
   "repository": {
     "url": "https://github.com/Rachit8484/geoseo-mcp",
     "source": "github"
@@ -47,6 +47,20 @@
           "format": "string"
         },
         {
+          "name": "GEOSEO_XAI_API_KEY",
+          "description": "xAI API key for Grok citation checks",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_BRAVE_API_KEY",
+          "description": "Brave Search API key (Answers plan) for Brave citation checks",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
           "name": "GEOSEO_SERPAPI_API_KEY",
           "description": "SerpAPI key for Google AI Overviews tracking",
           "isRequired": false,
@@ -56,6 +70,13 @@
         {
           "name": "GEOSEO_BING_WEBMASTER_API_KEY",
           "description": "Bing Webmaster Tools API key",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GEOSEO_YANDEX_OAUTH_TOKEN",
+          "description": "Yandex Webmaster OAuth token",
           "isRequired": false,
           "isSecret": true,
           "format": "string"

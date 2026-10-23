@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "geoseo-mcp"
 version = "0.4.0"
-description = "MCP server for SEO + GEO: Search Console, Bing, IndexNow, AI Overviews, and LLM citation tracking across ChatGPT, Claude, Gemini and Perplexity."
+description = "MCP server for SEO + GEO: Search Console, Bing, Yandex, IndexNow, AI Overviews, and LLM citation tracking across ChatGPT, Claude, Gemini, Perplexity, Grok and Brave."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
