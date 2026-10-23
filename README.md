@@ -2,7 +2,7 @@
 
 <!-- mcp-name: io.github.Rachit8484/geoseo-mcp -->
 
-> An open-source MCP server for traditional SEO **and** Generative Engine Optimization (GEO): Google Search Console, Bing, IndexNow, Google AI Overviews, and citation tracking across ChatGPT, Claude, Gemini, Perplexity and Grok, all in one server.
+> An open-source MCP server for traditional SEO **and** Generative Engine Optimization (GEO): Google Search Console, Bing, IndexNow, Google AI Overviews, and citation tracking across ChatGPT, Claude, Gemini, Perplexity, Grok and Brave, all in one server.
 
 [![PyPI](https://img.shields.io/pypi/v/geoseo-mcp.svg)](https://pypi.org/project/geoseo-mcp/)
 [![CI](https://github.com/Rachit8484/geoseo-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Rachit8484/geoseo-mcp/actions/workflows/ci.yml)
@@ -49,7 +49,7 @@ https://example.com
 
 Other keyless commands: `audit-site ./content`, `generate-llms-txt ./content https://yourdomain.com`, `status`. Run `uvx geoseo-mcp --help` for everything.
 
-Poke at all 40 tools in the MCP Inspector:
+Poke at all 41 tools in the MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector uvx geoseo-mcp
@@ -92,6 +92,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
         "GEOSEO_ANTHROPIC_API_KEY": "sk-ant-...",
         "GEOSEO_GEMINI_API_KEY": "AIza...",
         "GEOSEO_XAI_API_KEY": "xai-...",
+        "GEOSEO_BRAVE_API_KEY": "...",
         "GEOSEO_PERPLEXITY_API_KEY": "pplx-...",
         "GEOSEO_SERPAPI_API_KEY": "...",
         "GEOSEO_GOOGLE_CLIENT_SECRET": "/absolute/path/to/client_secret.json",
@@ -119,7 +120,7 @@ Then just ask:
 | **Bing Webmaster** | Site stats, query/page stats, URL info, URL submission, crawl issues |
 | **Bing / Yandex / Naver / Seznam** | IndexNow submission |
 | **Google AI Overviews** | `aio_check` + `aio_citation_check` via SerpAPI |
-| **LLM citations** | ChatGPT (web search), Claude (web search), Gemini (Google Search grounding), Perplexity (Agent API), Grok (xAI web search), plus `multi_llm_*` tools that fan out across all of them |
+| **LLM citations** | ChatGPT (web search), Claude (web search), Gemini (Google Search grounding), Perplexity (Agent API), Grok (xAI web search), Brave (Answers API), plus `multi_llm_*` tools that fan out across all of them |
 | **On-page** | Title / meta / heading / schema / internal-link audit, 0-100 score, optional JS rendering |
 | **Internal link graph** | Orphans, dead-ends, hubs, dangling links, TF-IDF related-page suggestions with anchor hints |
 | **`llms.txt`** | Generate from a folder of HTML, validate against the spec |
@@ -148,6 +149,7 @@ Approximate list prices as of October 2026; check each provider's pricing page b
 | Claude ([pricing](https://docs.anthropic.com/en/docs/about-claude/pricing)) | Messages API + `web_search` tool | $10 / 1k searches + tokens |
 | Gemini ([pricing](https://ai.google.dev/gemini-api/docs/pricing)) | `gemini-3.5-flash-lite` + Google Search grounding | 5,000 free grounded requests / month, then $14 / 1k + tokens |
 | Perplexity ([pricing](https://docs.perplexity.ai/docs/getting-started/pricing)) | Agent API, `fast` preset | ~$2.50 / 1k searches + tokens |
+| Brave ([pricing](https://api-dashboard.search.brave.com/documentation/services/answers)) | Answers API, streaming with citations | ~$4 / 1k searches + $5 / M tokens |
 | Google AI Overviews ([pricing](https://serpapi.com/pricing)) | SerpAPI | 250 free searches / month, then plan pricing |
 
 A 10-question check with 3 samples across four engines is 120 calls, which is usually well under $2. Use `samples=1` for quick spot checks.
@@ -159,6 +161,7 @@ A 10-question check with 3 samples across four engines is 120 calls, which is us
 - **Gemini**: [API key from AI Studio](https://aistudio.google.com/app/apikey). Uses Google Search grounding (the same index AI Overviews use).
 - **Perplexity**: [API key](https://www.perplexity.ai/settings/api). Uses the Agent API with the `fast` preset; set `GEOSEO_PERPLEXITY_EFFORT` or `GEOSEO_PERPLEXITY_MODEL` to change it.
 - **xAI Grok**: [API key from the xAI console](https://console.x.ai), set as `GEOSEO_XAI_API_KEY`. Uses the Responses API with the `web_search` tool; override the model (default `grok-4.3`) with `GEOSEO_GROK_MODEL`.
+- **Brave Answers**: [API key with the Answers plan](https://api-dashboard.search.brave.com), set as `GEOSEO_BRAVE_API_KEY`. Answers come from Brave's own index.
 - **SerpAPI**: [API key](https://serpapi.com/manage-api-key). Free plan: 250 searches/month. Used for AI Overviews tracking.
 - **Google Search Console**: see [`docs/setup-gsc.md`](docs/setup-gsc.md). One-time OAuth flow.
 - **Bing Webmaster**: API key from [Bing Webmaster Tools](https://www.bing.com/webmasters/) → Settings → API access.
@@ -205,13 +208,13 @@ It binds to localhost by default. There is no built-in auth, so put it behind a 
 pip install 'geoseo-mcp[render]' && playwright install chromium
 ```
 
-## Tools (40)
+## Tools (41)
 
 - **Status**: `geoseo_status`, `list_llm_engines`
 - **Google Search Console**: `gsc_list_sites`, `gsc_performance`, `gsc_inspect_url`, `gsc_submit_sitemap`
 - **Bing Webmaster**: `bing_list_sites`, `bing_query_stats`, `bing_page_stats`, `bing_url_info`, `bing_submit_url`, `bing_crawl_issues`
 - **Indexing**: `indexnow_submit_url`, `indexnow_submit_urls`
-- **LLM citations**: `perplexity_query`, `perplexity_citation_check`, `openai_query`, `claude_query`, `gemini_query`, `grok_query`, `multi_llm_query`, **`multi_llm_citation_check`**
+- **LLM citations**: `perplexity_query`, `perplexity_citation_check`, `openai_query`, `claude_query`, `gemini_query`, `grok_query`, `brave_query`, `multi_llm_query`, **`multi_llm_citation_check`**
 - **Google AI Overviews**: `aio_check`, `aio_citation_check`
 - **On-page**: `audit_page`, `audit_site`, `find_broken_external_links`, `lint_schema_page`, `lint_schema_site`
 - **Link graph**: `internal_link_graph`, `suggest_internal_links`

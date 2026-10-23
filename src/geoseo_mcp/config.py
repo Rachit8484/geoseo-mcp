@@ -40,6 +40,7 @@ class Config:
     gemini_model: str
     grok_api_key: str | None
     grok_model: str
+    brave_api_key: str | None
     serpapi_api_key: str | None
     bing_webmaster_api_key: str | None
     citation_samples: int
@@ -70,6 +71,7 @@ class Config:
             gemini_model=os.getenv("GEOSEO_GEMINI_MODEL", "gemini-3.5-flash-lite"),
             grok_api_key=os.getenv("GEOSEO_XAI_API_KEY") or os.getenv("GEOSEO_GROK_API_KEY"),
             grok_model=os.getenv("GEOSEO_GROK_MODEL", "grok-4.3"),
+            brave_api_key=os.getenv("GEOSEO_BRAVE_API_KEY"),
             serpapi_api_key=os.getenv("GEOSEO_SERPAPI_API_KEY"),
             bing_webmaster_api_key=os.getenv("GEOSEO_BING_WEBMASTER_API_KEY"),
             citation_samples=int(os.getenv("GEOSEO_CITATION_SAMPLES", "3")),

@@ -16,6 +16,7 @@
 - `find_broken_external_links`: broken outbound-link prospector for a folder of HTML. Concurrent HEAD/GET checks, results grouped by status class with source pages and suggested actions, 7-day SQLite cache. (#7)
 - `lint_schema_page` and `lint_schema_site`: JSON-LD linter for Google's structured-data requirements, with `@graph` support, nested Offer/AggregateRating/Review checks and per-site summaries. Rules live in `audit/_schema_rules.py`. (#5)
 - xAI Grok engine and `grok_query` tool, using the Responses API `web_search` tool (Live Search `search_parameters` is retired). Grok joins `multi_llm_query` / `multi_llm_citation_check` automatically when `GEOSEO_XAI_API_KEY` is set. (#2)
+- Brave Answers engine and `brave_query` tool. Streams the answer with `enable_citations` and parses Brave's `<citation>` / `<usage>` tags. Joins the multi-LLM tools when `GEOSEO_BRAVE_API_KEY` is set. (#4)
 - Mocked test suite for every LLM engine, citation logic, SerpAPI, CLI, toolsets and JS detection (no network in CI). CI now also runs on Python 3.13.
 
 ### Changed
