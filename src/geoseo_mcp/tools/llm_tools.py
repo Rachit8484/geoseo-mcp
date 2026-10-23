@@ -10,7 +10,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from ..engines import anthropic, gemini, multi_llm, openai, perplexity
+from ..engines import anthropic, gemini, grok, multi_llm, openai, perplexity
 from ..engines.base import EngineError, EngineNotConfiguredError
 
 
@@ -93,6 +93,27 @@ def register(mcp: FastMCP) -> None:
         except (EngineNotConfiguredError, EngineError) as e:
             return {"error": str(e)}
 
+    # --- xAI Grok -----------------------------------------------------------
+    @mcp.tool()
+    def grok_query(
+        question: str, model: str | None = None, system_prompt: str | None = None,
+        x_search: bool = False,
+    ) -> dict[str, Any]:
+        """Ask Grok (with live web search) a question; return answer + cited URLs.
+
+        Uses the xAI Responses API with the ``web_search`` tool. ``citations``
+        are the URLs Grok actually cites inline; ``sources_considered`` lists
+        everything it looked at. Set ``x_search=True`` to also search X posts.
+        Default model: ``GEOSEO_GROK_MODEL`` (``grok-4.3``).
+        """
+        try:
+            return grok.query(
+                question=question, model=model, system_prompt=system_prompt,
+                x_search=x_search,
+            )
+        except (EngineNotConfiguredError, EngineError) as e:
+            return {"error": str(e)}
+
     # --- Multi-engine --------------------------------------------------------
     @mcp.tool()
     def multi_llm_query(
@@ -100,7 +121,7 @@ def register(mcp: FastMCP) -> None:
     ) -> dict[str, Any]:
         """Ask the same question to all (or selected) configured LLM engines in parallel.
 
-        ``engines``: optional subset of ``["perplexity","openai","anthropic","gemini"]``.
+        ``engines``: optional subset of ``["perplexity","openai","anthropic","gemini","grok"]``.
         Default: every engine with credentials configured (see ``geoseo_status``).
         Engines that error are reported per-engine and don't block the others.
         """
@@ -121,7 +142,7 @@ def register(mcp: FastMCP) -> None:
         """How often each configured LLM cites (or mentions) ``target_domain``.
 
         The headline GEO/AEO tool. Feed it your top 20-50 buyer questions and get
-        a per-engine breakdown for ChatGPT/Claude/Gemini/Perplexity:
+        a per-engine breakdown for ChatGPT/Claude/Gemini/Perplexity/Grok:
 
         - ``citation_rate`` (+ 95% interval): share of answers linking to your
           domain or any subdomain of it.

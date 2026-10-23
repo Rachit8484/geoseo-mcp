@@ -18,7 +18,7 @@ from collections.abc import Callable
 from typing import Any
 
 from ..config import get_config
-from . import anthropic, gemini, openai, perplexity
+from . import anthropic, gemini, grok, openai, perplexity
 from ._domains import (
     any_match,
     default_aliases,
@@ -45,6 +45,8 @@ def _engines_available() -> dict[str, EngineFn]:
         out["anthropic"] = lambda q: anthropic.query(q)
     if cfg.gemini_api_key:
         out["gemini"] = lambda q: gemini.query(q)
+    if cfg.grok_api_key:
+        out["grok"] = lambda q: grok.query(q)
     return out
 
 
@@ -59,7 +61,7 @@ def _select(engines: list[str] | None) -> dict[str, EngineFn]:
             "any LLM",
             "No LLM engines configured. Set at least one of "
             "GEOSEO_PERPLEXITY_API_KEY, GEOSEO_OPENAI_API_KEY, "
-            "GEOSEO_ANTHROPIC_API_KEY, or GEOSEO_GEMINI_API_KEY.",
+            "GEOSEO_ANTHROPIC_API_KEY, GEOSEO_GEMINI_API_KEY, or GEOSEO_XAI_API_KEY.",
         )
     selected = {name: fn for name, fn in available.items() if not engines or name in engines}
     if not selected:
