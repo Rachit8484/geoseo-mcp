@@ -9,7 +9,8 @@ Reads a folder of HTML files, builds a graph of (file -> file) edges from
   + meta description (cheap, deterministic, zero deps beyond bs4)
 
 The TF model is intentionally tiny — it stays under ~50ms for hundreds of
-pages and gives "good enough" related-link recs. Swap for embeddings later.
+pages and gives "good enough" related-link recs. ``mode="openai" | "gemini" |
+"local"`` swaps in embedding similarity instead (see ``embeddings.py``).
 """
 
 from __future__ import annotations
@@ -17,11 +18,14 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter, defaultdict
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib.parse import urldefrag, urlparse
 
 from bs4 import BeautifulSoup
+
+from . import embeddings
 
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9'\-]{2,}")
 
@@ -215,13 +219,20 @@ def suggest(
     top_k: int = 5,
     limit: int = 1000,
     site_host: str | None = None,
+    mode: str = "tfidf",
+    model: str | None = None,
 ) -> dict[str, Any]:
     """Suggest top-K internal links to add per page.
 
     If ``page`` is given (relative-to-folder path or absolute), suggestions
     are returned only for that page; otherwise for every page. Suggestions
     exclude pages already linked from the source.
+
+    ``mode`` picks the similarity model: ``tfidf`` (default, offline) or an
+    embedding backend (``openai``, ``gemini``, ``local``).
     """
+    if mode not in embeddings.MODES:
+        return {"error": f"Unknown mode {mode!r}; use one of {list(embeddings.MODES)}."}
     g = build(folder, pattern=pattern, limit=limit, site_host=site_host)
     if "error" in g:
         return g
@@ -264,7 +275,17 @@ def suggest(
         nb = math.sqrt(sum(v * v for v in b.values()))
         return dot / (na * nb) if na and nb else 0.0
 
-    vecs = {d: vec(d) for d in docs}
+    embed_stats: dict[str, Any] | None = None
+    if mode == "tfidf":
+        vecs = {d: vec(d) for d in docs}
+        sim: Callable[[Any, Any], float] = cosine
+    else:
+        try:
+            ev, embed_stats = embeddings.embed([_embed_text(feats[d]) for d in docs], mode, model)
+        except embeddings.EmbeddingError as e:
+            return {"error": str(e)}
+        vecs = dict(zip(docs, ev, strict=True))
+        sim = embeddings.cosine
 
     target_docs: list[str]
     if page:
@@ -290,7 +311,7 @@ def suggest(
         for cand in docs:
             if cand in existing:
                 continue
-            scored.append((cand, cosine(sv, vecs[cand])))
+            scored.append((cand, sim(sv, vecs[cand])))
         scored.sort(key=lambda x: x[1], reverse=True)
         top = [
             {
@@ -304,11 +325,21 @@ def suggest(
         ]
         suggestions[src] = top
 
-    return {
+    out: dict[str, Any] = {
         "folder": g["folder"],
         "files": g["files"],
+        "mode": mode,
         "suggestions": suggestions,
     }
+    if embed_stats:
+        out["embedding"] = embed_stats
+    return out
+
+
+def _embed_text(f: dict[str, Any]) -> str:
+    """Text sent to the embedding model: title, description, headings, body start."""
+    parts = [f["title"], f["desc"], f["headings"], (f.get("body") or "")[:2000]]
+    return "\n".join(p for p in parts if p)[:6000]
 
 
 def _anchor_hint(src: dict[str, Any], dst: dict[str, Any]) -> str:
