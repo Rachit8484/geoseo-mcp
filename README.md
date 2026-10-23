@@ -49,7 +49,7 @@ https://example.com
 
 Other keyless commands: `audit-site ./content`, `generate-llms-txt ./content https://yourdomain.com`, `status`. Run `uvx geoseo-mcp --help` for everything.
 
-Poke at all 41 tools in the MCP Inspector:
+Poke at all 47 tools in the MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector uvx geoseo-mcp
@@ -97,6 +97,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
         "GEOSEO_SERPAPI_API_KEY": "...",
         "GEOSEO_GOOGLE_CLIENT_SECRET": "/absolute/path/to/client_secret.json",
         "GEOSEO_BING_WEBMASTER_API_KEY": "...",
+        "GEOSEO_YANDEX_OAUTH_TOKEN": "y0_...",
         "GEOSEO_INDEXNOW_KEY": "..."
       }
     }
@@ -118,6 +119,7 @@ Then just ask:
 | --- | --- |
 | **Google Search** | GSC performance, URL inspection, sitemaps |
 | **Bing Webmaster** | Site stats, query/page stats, URL info, URL submission, crawl issues |
+| **Yandex Webmaster** | Site quality index, popular queries, important-page status, recrawl queue, diagnostics + broken internal links |
 | **Bing / Yandex / Naver / Seznam** | IndexNow submission |
 | **Google AI Overviews** | `aio_check` + `aio_citation_check` via SerpAPI |
 | **LLM citations** | ChatGPT (web search), Claude (web search), Gemini (Google Search grounding), Perplexity (Agent API), Grok (xAI web search), Brave (Answers API), plus `multi_llm_*` tools that fan out across all of them |
@@ -165,6 +167,7 @@ A 10-question check with 3 samples across four engines is 120 calls, which is us
 - **SerpAPI**: [API key](https://serpapi.com/manage-api-key). Free plan: 250 searches/month. Used for AI Overviews tracking.
 - **Google Search Console**: see [`docs/setup-gsc.md`](docs/setup-gsc.md). One-time OAuth flow.
 - **Bing Webmaster**: API key from [Bing Webmaster Tools](https://www.bing.com/webmasters/) → Settings → API access.
+- **Yandex Webmaster**: OAuth token. [Register an app](https://oauth.yandex.com/client/new) with both `webmaster:hostinfo` and `webmaster:verify` (hostinfo alone only lists sites), then get a token via `https://oauth.yandex.com/authorize?response_type=token&client_id=<id>` and set `GEOSEO_YANDEX_OAUTH_TOKEN`. [Docs](https://yandex.com/dev/webmaster/doc/en/tasks/how-to-get-oauth).
 - **IndexNow**: any random 32-char hex string hosted at `https://yourdomain.com/<key>.txt`. [Spec](https://www.indexnow.org/documentation).
 
 Tools that need a key you haven't set return a clear error; everything else keeps working.
@@ -173,7 +176,7 @@ Tools that need a key you haven't set return a clear error; everything else keep
 
 | Env var | Default | What it does |
 | --- | --- | --- |
-| `GEOSEO_TOOLSETS` | all | Comma-separated toolsets to expose: `gsc,bing,indexing,llm,aio,audit,graph,trend`. Fewer tools means less context for your agent. |
+| `GEOSEO_TOOLSETS` | all | Comma-separated toolsets to expose: `gsc,bing,yandex,indexing,llm,aio,audit,graph,trend`. Fewer tools means less context for your agent. |
 | `GEOSEO_CITATION_SAMPLES` | `3` | Default samples per question for `multi_llm_citation_check` (max 10). |
 | `GEOSEO_MAX_CONCURRENCY` | `8` | Max parallel LLM requests. |
 | `GEOSEO_OPENAI_MODEL` | `gpt-5-mini` | Model for ChatGPT checks. |
@@ -208,11 +211,12 @@ It binds to localhost by default. There is no built-in auth, so put it behind a 
 pip install 'geoseo-mcp[render]' && playwright install chromium
 ```
 
-## Tools (41)
+## Tools (47)
 
 - **Status**: `geoseo_status`, `list_llm_engines`
 - **Google Search Console**: `gsc_list_sites`, `gsc_performance`, `gsc_inspect_url`, `gsc_submit_sitemap`
 - **Bing Webmaster**: `bing_list_sites`, `bing_query_stats`, `bing_page_stats`, `bing_url_info`, `bing_submit_url`, `bing_crawl_issues`
+- **Yandex Webmaster**: `yandex_list_sites`, `yandex_site_summary`, `yandex_query_stats`, `yandex_url_info`, `yandex_submit_url`, `yandex_crawl_issues`
 - **Indexing**: `indexnow_submit_url`, `indexnow_submit_urls`
 - **LLM citations**: `perplexity_query`, `perplexity_citation_check`, `openai_query`, `claude_query`, `gemini_query`, `grok_query`, `brave_query`, `multi_llm_query`, **`multi_llm_citation_check`**
 - **Google AI Overviews**: `aio_check`, `aio_citation_check`
@@ -222,6 +226,8 @@ pip install 'geoseo-mcp[render]' && playwright install chromium
 - **Trends**: `trend_init`, `trend_stats`, `snapshot_gsc`, `snapshot_llm_citations`, `snapshot_serp_aio`, `trend_gsc`, `trend_llm_citations`
 
 `suggest_internal_links` uses TF-IDF by default (offline, free). Pass `mode="openai"`, `"gemini"` or `"local"` (sentence-transformers) for embedding similarity; vectors are cached in SQLite by content hash.
+
+For Yandex tools, pass a normal URL as `site`; it's matched to the Yandex host id (`https:example.com:443`), following the main mirror. `yandex_url_info` only covers pages in "Monitoring important pages" (Yandex has no arbitrary-URL inspect endpoint).
 
 Snapshots are append-only and stored at `$GEOSEO_DB`. Schedule the `snapshot_*` tools weekly to build a private time series of your AI-search visibility.
 

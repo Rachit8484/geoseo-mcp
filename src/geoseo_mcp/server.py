@@ -22,11 +22,13 @@ from .tools import (
     llm_tools,
     serpapi_tools,
     trend_tools,
+    yandex_tools,
 )
 
 TOOLSETS = {
     "gsc": gsc_tools,
     "bing": bing_tools,
+    "yandex": yandex_tools,
     "indexing": indexing_tools,
     "llm": llm_tools,
     "aio": serpapi_tools,
@@ -68,7 +70,7 @@ def build_server(toolsets: str | Iterable[str] | None = None) -> FastMCP:
         name="geoseo-mcp",
         instructions=(
             "Unified SEO + GEO toolkit. Use `gsc_*` for Google Search Console, "
-            "`bing_*` for Bing Webmaster, `indexnow_*` to notify search engines, "
+            "`bing_*` for Bing Webmaster, `yandex_*` for Yandex Webmaster, `indexnow_*` to notify search engines, "
             "`*_query`/`multi_llm_*` to track LLM citations across "
             "ChatGPT/Claude/Gemini/Perplexity/Grok/Brave, `aio_*` for Google AI Overviews "
             "(via SerpAPI), `audit_*` for on-page checks, "
@@ -167,6 +169,15 @@ def build_server(toolsets: str | Iterable[str] | None = None) -> FastMCP:
                         if cfg.bing_webmaster_api_key
                         else "Set GEOSEO_BING_WEBMASTER_API_KEY "
                         "(https://www.bing.com/webmasters → Settings → API access)."
+                    ),
+                },
+                "yandex_webmaster": {
+                    "configured": cfg.yandex_oauth_token is not None,
+                    "message": (
+                        "Yandex Webmaster OAuth token configured."
+                        if cfg.yandex_oauth_token
+                        else "Set GEOSEO_YANDEX_OAUTH_TOKEN "
+                        "(https://yandex.com/dev/webmaster/doc/en/tasks/how-to-get-oauth)."
                     ),
                 },
                 "serpapi_aio": {

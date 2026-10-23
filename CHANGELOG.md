@@ -8,7 +8,7 @@
 
 - **Keyless CLI**: `geoseo-mcp audit <url|file>`, `audit-site <folder>`, `llms-txt <url>`, `generate-llms-txt <folder> <site_url>`, `status`, `--version`. Running with no arguments still starts the stdio server.
 - **Streamable HTTP transport**: `geoseo-mcp serve --transport http [--host] [--port]` (or `GEOSEO_TRANSPORT=http`). Serves `/mcp`, binds to 127.0.0.1 by default.
-- **`GEOSEO_TOOLSETS`**: expose only some tool groups (`gsc,bing,indexing,llm,aio,audit,graph,trend`). `geoseo_status` reports what is enabled.
+- **`GEOSEO_TOOLSETS`**: expose only some tool groups (`gsc,bing,yandex,indexing,llm,aio,audit,graph,trend`). `geoseo_status` reports what is enabled.
 - **JS rendering for `audit_page`**: optional `[render]` extra (Playwright). `render=True` / `--render` audits the rendered DOM, and pages that look like empty JS shells get a `js_rendering` finding.
 - **`multi_llm_citation_check` sampling**: `samples` (default 3, `GEOSEO_CITATION_SAMPLES`) runs each question several times per engine and reports `citation_rate` with a 95% Wilson interval, per-question `cited_rate`, variance and a `stable` flag.
 - **Unlinked brand mentions**: `mention_rate` / `unlinked_mention_rate`, with aliases derived from the domain or passed via `brand_aliases`.
@@ -18,6 +18,7 @@
 - xAI Grok engine and `grok_query` tool, using the Responses API `web_search` tool (Live Search `search_parameters` is retired). Grok joins `multi_llm_query` / `multi_llm_citation_check` automatically when `GEOSEO_XAI_API_KEY` is set. (#2)
 - Brave Answers engine and `brave_query` tool. Streams the answer with `enable_citations` and parses Brave's `<citation>` / `<usage>` tags. Joins the multi-LLM tools when `GEOSEO_BRAVE_API_KEY` is set. (#4)
 - `suggest_internal_links(mode=...)`: optional embedding similarity via OpenAI `text-embedding-3-small`, Gemini `gemini-embedding-001`, or local sentence-transformers. TF-IDF remains the default. Embeddings are cached in SQLite keyed by content hash. (#3)
+- Yandex Webmaster engine (API v4) + 6 tools: `yandex_list_sites`, `yandex_site_summary`, `yandex_query_stats`, `yandex_url_info`, `yandex_submit_url`, `yandex_crawl_issues`. OAuth token via `GEOSEO_YANDEX_OAUTH_TOKEN`; reported in `geoseo_status`; `yandex` toolset. (#1)
 - Mocked test suite for every LLM engine, citation logic, SerpAPI, CLI, toolsets and JS detection (no network in CI). CI now also runs on Python 3.13.
 
 ### Changed
