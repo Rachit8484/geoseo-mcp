@@ -9,11 +9,11 @@ Docs: https://docs.anthropic.com/en/docs/build-with-claude/tool-use/web-search-t
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
 from ..config import get_config
+from ._domains import domain_of
 from .base import EngineError, EngineNotConfiguredError
 
 ANTHROPIC_MESSAGES_ENDPOINT = "https://api.anthropic.com/v1/messages"
@@ -106,8 +106,4 @@ def _extract_answer_and_citations(data: dict[str, Any]) -> tuple[str, list[str]]
 
 
 def _domain(url: str) -> str:
-    try:
-        host = urlparse(url).netloc.lower()
-    except Exception:
-        return url
-    return host[4:] if host.startswith("www.") else host
+    return domain_of(url)

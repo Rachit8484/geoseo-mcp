@@ -63,15 +63,18 @@ def register(mcp: FastMCP) -> None:
         questions: list[str],
         target_domain: str,
         engines: list[str] | None = None,
+        samples: int = 1,
     ) -> dict[str, Any]:
         """Run multi-LLM citation check and persist the per-question results.
 
         Builds the dataset behind ``trend_llm_citations``. ``engines``
-        defaults to every configured LLM (see ``geoseo_status``).
+        defaults to every configured LLM (see ``geoseo_status``). With
+        ``samples > 1`` a question is stored as cited when most samples cite you.
         """
         try:
             res = multi_llm.multi_citation_check(
                 questions=questions, target_domain=target_domain, engines=engines,
+                samples=samples,
             )
         except (EngineNotConfiguredError, EngineError) as e:
             return {"error": str(e)}
@@ -79,7 +82,7 @@ def register(mcp: FastMCP) -> None:
         flat: list[dict[str, Any]] = []
         for engine_name, eng in (res.get("by_engine") or {}).items():
             for r in eng.get("results", []):
-                if "error" in r:
+                if "error" in r or not r.get("samples_ok", 1):
                     continue
                 flat.append({
                     "engine": engine_name,

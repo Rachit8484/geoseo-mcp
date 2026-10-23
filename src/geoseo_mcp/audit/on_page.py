@@ -55,15 +55,142 @@ class PageAudit:
     quotable_sentences: int
     score: int
     findings: list[dict[str, Any]] = field(default_factory=list)
+    rendered: bool = False
+    raw_word_count: int | None = None
+    js_dependent: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
-def audit(source: str) -> dict[str, Any]:
-    """Audit a local file path or HTTP(S) URL."""
-    html, url = _load(source)
-    return _audit_html(html, source=source, url=url).to_dict()
+RENDER_HINT = (
+    'JavaScript rendering needs the optional extra: pip install "geoseo-mcp[render]" '
+    "&& playwright install chromium"
+)
+
+# Server-sent HTML below these word counts, combined with an SPA mount point
+# or external scripts, is almost certainly a client-rendered shell.
+JS_SHELL_WORDS = 50
+JS_SHELL_WORDS_NO_ROOT = 20
+_SPA_ROOT_IDS = {"root", "app", "__next", "__nuxt", "svelte", "q-app", "main-app"}
+
+
+class RenderUnavailableError(RuntimeError):
+    pass
+
+
+def audit(source: str, render: bool = False) -> dict[str, Any]:
+    """Audit a local file path or HTTP(S) URL.
+
+    ``render=True`` loads the URL in headless Chromium (Playwright) and audits
+    the rendered DOM. The raw HTML is still analysed so the report can say
+    whether the page only has content once JavaScript runs.
+    """
+    raw_html, url = _load(source)
+    raw_soup = BeautifulSoup(raw_html, "lxml")
+    raw_words = _word_count(raw_soup)
+    js_shell = _looks_like_js_shell(raw_soup, raw_words)
+
+    html = raw_html
+    rendered = False
+    if render:
+        if not source.startswith(("http://", "https://")):
+            html = _render_file(source)
+        else:
+            html = _render_url(url or source)
+        rendered = True
+
+    report = _audit_html(html, source=source, url=url)
+    if rendered and raw_words < JS_SHELL_WORDS and report.word_count >= raw_words + 100:
+        js_shell = True  # confirmed: the content only exists after JS runs
+    report.rendered = rendered
+    report.raw_word_count = raw_words
+    report.js_dependent = js_shell
+    detail = f"words_without_js={raw_words}"
+    if rendered:
+        detail += f", words_with_js={report.word_count}"
+    _check(
+        report.findings,
+        not js_shell,
+        "js_rendering",
+        "Page is nearly empty without JavaScript. GPTBot, ClaudeBot and PerplexityBot "
+        "don't run JS, so AI search likely sees a blank page. Server-render or "
+        "prerender the main content.",
+        detail=detail,
+    )
+    if js_shell:
+        # A great rendered page is still invisible to crawlers that skip JS.
+        report.score = min(report.score, 50)
+    return report.to_dict()
+
+
+def _word_count(soup: BeautifulSoup) -> int:
+    return len(_WORD_RE.findall(_visible_text(soup)))
+
+
+def _visible_text(soup: BeautifulSoup) -> str:
+    """Body text without script/style/template contents."""
+    clone = BeautifulSoup(str(soup), "lxml")
+    for t in clone(["script", "style", "noscript", "template"]):
+        t.decompose()
+    return clone.get_text(" ", strip=True)
+
+
+def _looks_like_js_shell(soup: BeautifulSoup, words: int) -> bool:
+    if words >= JS_SHELL_WORDS:
+        return False
+    has_root = any(
+        el.get("id") in _SPA_ROOT_IDS for el in soup.find_all(["div", "main", "body"])
+    )
+    if has_root:
+        return True
+    inline = [s for s in soup.find_all("script") if s.get("type") != "application/ld+json"]
+    heavy_inline = sum(len(s.string or "") for s in inline) > 2000
+    return words < JS_SHELL_WORDS_NO_ROOT and (bool(soup.find("script", src=True)) or heavy_inline)
+
+
+def _render_url(url: str, timeout_s: float | None = None) -> str:
+    """Return the rendered DOM of ``url`` using headless Chromium.
+
+    Runs in a worker thread because Playwright's sync API refuses to run on a
+    thread that already has an asyncio loop (which MCP servers do).
+    """
+    try:
+        from playwright.sync_api import sync_playwright  # noqa: F401
+    except ImportError as e:
+        raise RenderUnavailableError(RENDER_HINT) from e
+
+    import concurrent.futures as cf
+
+    cfg = get_config()
+    timeout_ms = int((timeout_s or cfg.request_timeout_s) * 1000)
+
+    def _go() -> str:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            try:
+                page = browser.new_page(user_agent=cfg.user_agent)
+                page.goto(url, wait_until="networkidle", timeout=timeout_ms)
+                return page.content()
+            finally:
+                browser.close()
+
+    with cf.ThreadPoolExecutor(max_workers=1) as pool:
+        try:
+            return pool.submit(_go).result()
+        except RenderUnavailableError:
+            raise
+        except Exception as e:
+            msg = str(e)
+            if "Executable doesn't exist" in msg or "playwright install" in msg:
+                raise RenderUnavailableError(RENDER_HINT) from e
+            raise
+
+
+def _render_file(source: str) -> str:
+    return _render_url(Path(source).expanduser().resolve().as_uri())
 
 
 def _load(source: str) -> tuple[str, str | None]:
@@ -94,7 +221,7 @@ def _audit_html(html: str, source: str, url: str | None) -> PageAudit:
     h2 = [t.get_text(" ", strip=True) for t in soup.find_all("h2")]
     h3 = [t.get_text(" ", strip=True) for t in soup.find_all("h3")]
 
-    body_text = soup.get_text(" ", strip=True)
+    body_text = _visible_text(soup)
     word_count = len(_WORD_RE.findall(body_text))
 
     internal_links, external_links = _count_links(soup, base=url)

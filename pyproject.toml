@@ -1,15 +1,16 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
 name = "geoseo-mcp"
-version = "0.3.0"
-description = "Open-source MCP server unifying SEO + GEO across Google, Bing, Yandex, and major LLMs."
+version = "0.4.0"
+description = "MCP server for SEO + GEO: Search Console, Bing, IndexNow, AI Overviews, and LLM citation tracking across ChatGPT, Claude, Gemini and Perplexity."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
-authors = [{ name = "geoseo-mcp contributors" }]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Rachit Agarwal" }]
 keywords = [
     "mcp",
     "model-context-protocol",
@@ -26,18 +27,24 @@ keywords = [
     "gemini",
     "perplexity",
     "llms-txt",
+    "generative-engine-optimization",
+    "ai-search",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
 ]
 
 dependencies = [
-    "fastmcp>=0.4.0",
+    "fastmcp>=3.0,<4",
     "httpx>=0.27.0",
     "pydantic>=2.7.0",
     "beautifulsoup4>=4.12.0",
@@ -49,6 +56,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# JavaScript rendering for audit_page(render=True). Run `playwright install chromium` after.
+render = ["playwright>=1.45"]
 dev = [
     "pytest>=8.2.0",
     "pytest-asyncio>=0.23.0",
@@ -63,9 +72,13 @@ geoseo-mcp = "geoseo_mcp.__main__:main"
 Homepage = "https://github.com/Rachit8484/geoseo-mcp"
 Repository = "https://github.com/Rachit8484/geoseo-mcp"
 Issues = "https://github.com/Rachit8484/geoseo-mcp/issues"
+Changelog = "https://github.com/Rachit8484/geoseo-mcp/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/geoseo_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/geoseo_mcp", "tests", "README.md", "LICENSE", "CHANGELOG.md", "server.json"]
 
 [tool.ruff]
 line-length = 100

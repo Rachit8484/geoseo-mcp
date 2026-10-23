@@ -1,6 +1,6 @@
 """OpenAI engine (ChatGPT with web search).
 
-Uses the Responses API + ``web_search_preview`` tool, which returns inline
+Uses the Responses API + the ``web_search`` tool, which returns inline
 ``url_citation`` annotations alongside the generated text. This is the cleanest
 way to attribute ChatGPT's answer to specific URLs.
 
@@ -10,11 +10,11 @@ Docs: https://platform.openai.com/docs/guides/tools-web-search
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
 from ..config import get_config
+from ._domains import domain_of
 from .base import EngineError, EngineNotConfiguredError
 
 OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
@@ -43,7 +43,7 @@ def query(
     payload: dict[str, Any] = {
         "model": model,
         "input": question,
-        "tools": [{"type": "web_search_preview"}],
+        "tools": [{"type": "web_search"}],
     }
     if system_prompt:
         payload["instructions"] = system_prompt
@@ -102,8 +102,4 @@ def _extract_answer_and_citations(data: dict[str, Any]) -> tuple[str, list[str]]
 
 
 def _domain(url: str) -> str:
-    try:
-        host = urlparse(url).netloc.lower()
-    except Exception:
-        return url
-    return host[4:] if host.startswith("www.") else host
+    return domain_of(url)

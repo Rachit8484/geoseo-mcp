@@ -4,9 +4,14 @@
       "command": "uvx",
       "args": ["geoseo-mcp"],
       "env": {
+        "GEOSEO_OPENAI_API_KEY": "sk-...",
+        "GEOSEO_ANTHROPIC_API_KEY": "sk-ant-...",
+        "GEOSEO_GEMINI_API_KEY": "AIza...",
+        "GEOSEO_PERPLEXITY_API_KEY": "pplx-...",
+        "GEOSEO_SERPAPI_API_KEY": "your-serpapi-key",
         "GEOSEO_GOOGLE_CLIENT_SECRET": "/absolute/path/to/client_secret.json",
-        "GEOSEO_INDEXNOW_KEY": "your-32-char-hex-key",
-        "GEOSEO_PERPLEXITY_API_KEY": "pplx-your-key"
+        "GEOSEO_BING_WEBMASTER_API_KEY": "your-bing-key",
+        "GEOSEO_INDEXNOW_KEY": "your-32-char-hex-key"
       }
     }
   }

@@ -21,9 +21,13 @@ def register(mcp: FastMCP) -> None:
         question: str,
         model: str | None = None,
         system_prompt: str | None = None,
-        max_tokens: int = 1024,
+        max_tokens: int | None = None,
     ) -> dict[str, Any]:
-        """Ask Perplexity a question; return answer + cited URLs/domains."""
+        """Ask Perplexity (Agent API + web search); return answer + cited URLs/domains.
+
+        Defaults to the ``fast`` effort preset. Pass ``model`` to pin one
+        (e.g. ``openai/gpt-5-mini``); legacy names like ``sonar`` still work.
+        """
         try:
             return perplexity.query(
                 question=question, model=model, system_prompt=system_prompt,
@@ -51,8 +55,8 @@ def register(mcp: FastMCP) -> None:
     ) -> dict[str, Any]:
         """Ask ChatGPT (with web search) a question; return answer + cited URLs.
 
-        Uses the OpenAI Responses API with the ``web_search_preview`` tool.
-        Default model: ``GEOSEO_OPENAI_MODEL`` (``gpt-4o-mini``).
+        Uses the OpenAI Responses API with the ``web_search`` tool.
+        Default model: ``GEOSEO_OPENAI_MODEL`` (``gpt-5-mini``).
         """
         try:
             return openai.query(question=question, model=model, system_prompt=system_prompt)
@@ -107,18 +111,40 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def multi_llm_citation_check(
-        questions: list[str], target_domain: str, engines: list[str] | None = None,
+        questions: list[str],
+        target_domain: str,
+        engines: list[str] | None = None,
+        samples: int | None = None,
+        brand_aliases: list[str] | None = None,
+        max_concurrency: int | None = None,
     ) -> dict[str, Any]:
-        """Citation-share metrics for ``target_domain`` across every configured LLM.
+        """How often each configured LLM cites (or mentions) ``target_domain``.
 
-        This is the headline GEO/AEO tool: feed it your top 20-50 user questions,
-        get a per-engine breakdown of how often ChatGPT/Claude/Gemini/Perplexity
-        cite your domain, plus the top competing domains per engine. Run weekly
-        and diff to track AI-search visibility over time.
+        The headline GEO/AEO tool. Feed it your top 20-50 buyer questions and get
+        a per-engine breakdown for ChatGPT/Claude/Gemini/Perplexity:
+
+        - ``citation_rate`` (+ 95% interval): share of answers linking to your
+          domain or any subdomain of it.
+        - ``mention_rate`` / ``unlinked_mention_rate``: answers that name your
+          brand, with or without a link. Pass ``brand_aliases`` (e.g.
+          ``["Acme", "Acme CRM"]``) if your brand isn't obvious from the domain.
+        - ``top_competing_domains`` and per-question results.
+
+        LLM answers vary run to run, so every question is asked ``samples``
+        times per engine (default ``GEOSEO_CITATION_SAMPLES``, 3; max 10).
+        Cost scales with questions x samples x engines.
         """
+        from ..config import get_config
+
+        cfg = get_config()
         try:
             return multi_llm.multi_citation_check(
-                questions=questions, target_domain=target_domain, engines=engines,
+                questions=questions,
+                target_domain=target_domain,
+                engines=engines,
+                samples=samples or cfg.citation_samples,
+                brand_aliases=brand_aliases,
+                max_concurrency=max_concurrency or cfg.max_concurrency,
             )
         except (EngineNotConfiguredError, EngineError) as e:
             return {"error": str(e)}

@@ -1,5 +1,10 @@
 name: release
 
+# Publishes to PyPI with Trusted Publishing (OIDC). No API token is stored in
+# the repo. One-time setup on pypi.org (Account -> Publishing):
+# add a pending publisher on pypi.org for this repo, workflow `release.yml`,
+# environment `pypi`.
+
 on:
   push:
     tags:
@@ -7,30 +12,63 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Tag or commit to publish (e.g. v0.3.0). Defaults to current branch tip."
-        required: false
-        default: ""
+        description: "Tag to publish, e.g. v0.4.0"
+        required: true
 
 jobs:
-  pypi:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/geoseo-mcp
-    permissions:
-      id-token: write  # for PyPI Trusted Publishing (no API token needed)
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
 
+      - name: Check tag matches package version
+        env:
+          REF: ${{ inputs.ref || github.ref_name }}
+        run: |
+          version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          init=$(grep -m1 '__version__' src/geoseo_mcp/__init__.py | cut -d'"' -f2)
+          tag="${REF#refs/tags/}"
+          echo "tag=$tag pyproject=$version __init__=$init"
+          test "$tag" = "v$version" || { echo "::error::tag $tag != v$version"; exit 1; }
+          test "$init" = "$version" || { echo "::error::__init__ $init != $version"; exit 1; }
+
+      - name: Test
+        run: |
+          uv sync --extra dev
+          uv run ruff check src/ tests/
+          uv run pytest -q
+
       - name: Build
         run: uv build
+
+      - name: Smoke-test wheel
+        run: uv run --isolated --no-project --with ./dist/geoseo_mcp-*.whl geoseo-mcp --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/geoseo-mcp
+    permissions:
+      id-token: write  # Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

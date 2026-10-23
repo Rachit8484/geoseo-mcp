@@ -9,12 +9,13 @@ Docs: https://ai.google.dev/gemini-api/docs/grounding
 
 from __future__ import annotations
 
+import re
 from typing import Any
-from urllib.parse import urlparse
 
 import httpx
 
 from ..config import get_config
+from ._domains import domain_of, normalize_domain
 from .base import EngineError, EngineNotConfiguredError
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -47,19 +48,24 @@ def query(
     if system_prompt:
         payload["systemInstruction"] = {"parts": [{"text": system_prompt}]}
 
-    url = f"{GEMINI_BASE}/{model}:generateContent?key={api_key}"
+    # Key goes in a header so it never ends up in URLs, logs or tracebacks.
+    url = f"{GEMINI_BASE}/{model}:generateContent"
     with httpx.Client(timeout=cfg.request_timeout_s) as c:
         r = c.post(
             url,
             json=payload,
-            headers={"Content-Type": "application/json", "User-Agent": cfg.user_agent},
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": api_key,
+                "User-Agent": cfg.user_agent,
+            },
         )
     if r.status_code >= 400:
         raise EngineError(f"Gemini {r.status_code}: {r.text[:300]}")
 
     data = r.json()
     answer, citations = _extract_answer_and_citations(data)
-    cited_domains = sorted({_domain(u) for u in citations if u})
+    cited_domains = _cited_domains(data)
 
     return {
         "engine": "gemini",
@@ -95,9 +101,34 @@ def _extract_answer_and_citations(data: dict[str, Any]) -> tuple[str, list[str]]
     return "".join(text_parts), deduped
 
 
+_REDIRECT_HOSTS = {"vertexaisearch.cloud.google.com"}
+_DOMAIN_RE = re.compile(r"^[a-z0-9-]+(\.[a-z0-9-]+)+$")
+
+
+def _cited_domains(data: dict[str, Any]) -> list[str]:
+    """Domains behind the grounding chunks.
+
+    Gemini returns ``vertexaisearch.cloud.google.com/grounding-api-redirect/...``
+    URLs, not the source URL. The source domain lives in ``web.domain`` (newer
+    responses) or ``web.title`` (which is the bare domain in practice).
+    """
+    out: set[str] = set()
+    for cand in data.get("candidates", []) or []:
+        gm = cand.get("groundingMetadata", {}) or {}
+        for chunk in gm.get("groundingChunks", []) or []:
+            web = chunk.get("web") or {}
+            uri = web.get("uri") or web.get("url") or ""
+            host = _domain(uri) if uri else ""
+            if host and host not in _REDIRECT_HOSTS:
+                out.add(host)
+                continue
+            for candidate in (web.get("domain"), web.get("title")):
+                d = normalize_domain(candidate or "")
+                if d and _DOMAIN_RE.match(d):
+                    out.add(d)
+                    break
+    return sorted(out)
+
+
 def _domain(url: str) -> str:
-    try:
-        host = urlparse(url).netloc.lower()
-    except Exception:
-        return url
-    return host[4:] if host.startswith("www.") else host
+    return domain_of(url)
