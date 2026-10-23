@@ -122,7 +122,7 @@ Then just ask:
 | **Google AI Overviews** | `aio_check` + `aio_citation_check` via SerpAPI |
 | **LLM citations** | ChatGPT (web search), Claude (web search), Gemini (Google Search grounding), Perplexity (Agent API), Grok (xAI web search), Brave (Answers API), plus `multi_llm_*` tools that fan out across all of them |
 | **On-page** | Title / meta / heading / schema / internal-link audit, 0-100 score, optional JS rendering |
-| **Internal link graph** | Orphans, dead-ends, hubs, dangling links, TF-IDF related-page suggestions with anchor hints |
+| **Internal link graph** | Orphans, dead-ends, hubs, dangling links, related-page suggestions with anchor hints (TF-IDF by default, or OpenAI / Gemini / local embeddings) |
 | **`llms.txt`** | Generate from a folder of HTML, validate against the spec |
 | **Trend tracking** | Local SQLite snapshots of GSC, LLM citations and AIO, with trend tools |
 
@@ -220,6 +220,8 @@ pip install 'geoseo-mcp[render]' && playwright install chromium
 - **Link graph**: `internal_link_graph`, `suggest_internal_links`
 - **llms.txt**: `generate_llms_txt`, `validate_llms_txt`
 - **Trends**: `trend_init`, `trend_stats`, `snapshot_gsc`, `snapshot_llm_citations`, `snapshot_serp_aio`, `trend_gsc`, `trend_llm_citations`
+
+`suggest_internal_links` uses TF-IDF by default (offline, free). Pass `mode="openai"`, `"gemini"` or `"local"` (sentence-transformers) for embedding similarity; vectors are cached in SQLite by content hash.
 
 Snapshots are append-only and stored at `$GEOSEO_DB`. Schedule the `snapshot_*` tools weekly to build a private time series of your AI-search visibility.
 

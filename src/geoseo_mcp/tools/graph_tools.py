@@ -43,11 +43,17 @@ def register(mcp: FastMCP) -> None:
         top_k: int = 5,
         limit: int = 1000,
         site_host: str | None = None,
+        mode: str = "tfidf",
+        model: str | None = None,
     ) -> dict[str, Any]:
         """Suggest top-K internal links to add to each page in a folder.
 
-        Uses TF-IDF cosine similarity over ``<title>``, headings, and
-        meta description. Excludes links the source already has, plus
+        By default uses TF-IDF cosine similarity over ``<title>``, headings,
+        meta description and body text (offline, free). Set ``mode`` to
+        ``"openai"`` (text-embedding-3-small), ``"gemini"``
+        (gemini-embedding-001) or ``"local"`` (sentence-transformers) for
+        embedding similarity; ``model`` overrides the default model. Vectors
+        are cached in SQLite by content hash, so re-runs are cheap. Excludes links the source already has, plus
         the page itself. Returns suggestions for ``page`` only if
         provided, otherwise for every page.
 
@@ -56,5 +62,5 @@ def register(mcp: FastMCP) -> None:
         """
         return internal_links.suggest(
             folder=folder, page=page, pattern=pattern, top_k=top_k, limit=limit,
-            site_host=site_host,
+            site_host=site_host, mode=mode, model=model,
         )

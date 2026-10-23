@@ -17,6 +17,7 @@
 - `lint_schema_page` and `lint_schema_site`: JSON-LD linter for Google's structured-data requirements, with `@graph` support, nested Offer/AggregateRating/Review checks and per-site summaries. Rules live in `audit/_schema_rules.py`. (#5)
 - xAI Grok engine and `grok_query` tool, using the Responses API `web_search` tool (Live Search `search_parameters` is retired). Grok joins `multi_llm_query` / `multi_llm_citation_check` automatically when `GEOSEO_XAI_API_KEY` is set. (#2)
 - Brave Answers engine and `brave_query` tool. Streams the answer with `enable_citations` and parses Brave's `<citation>` / `<usage>` tags. Joins the multi-LLM tools when `GEOSEO_BRAVE_API_KEY` is set. (#4)
+- `suggest_internal_links(mode=...)`: optional embedding similarity via OpenAI `text-embedding-3-small`, Gemini `gemini-embedding-001`, or local sentence-transformers. TF-IDF remains the default. Embeddings are cached in SQLite keyed by content hash. (#3)
 - Mocked test suite for every LLM engine, citation logic, SerpAPI, CLI, toolsets and JS detection (no network in CI). CI now also runs on Python 3.13.
 
 ### Changed
