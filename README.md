@@ -49,7 +49,7 @@ https://example.com
 
 Other keyless commands: `audit-site ./content`, `generate-llms-txt ./content https://yourdomain.com`, `status`. Run `uvx geoseo-mcp --help` for everything.
 
-Poke at all 37 tools in the MCP Inspector:
+Poke at all 39 tools in the MCP Inspector:
 
 ```bash
 npx @modelcontextprotocol/inspector uvx geoseo-mcp
@@ -202,7 +202,7 @@ It binds to localhost by default. There is no built-in auth, so put it behind a 
 pip install 'geoseo-mcp[render]' && playwright install chromium
 ```
 
-## Tools (37)
+## Tools (39)
 
 - **Status**: `geoseo_status`, `list_llm_engines`
 - **Google Search Console**: `gsc_list_sites`, `gsc_performance`, `gsc_inspect_url`, `gsc_submit_sitemap`
@@ -210,7 +210,7 @@ pip install 'geoseo-mcp[render]' && playwright install chromium
 - **Indexing**: `indexnow_submit_url`, `indexnow_submit_urls`
 - **LLM citations**: `perplexity_query`, `perplexity_citation_check`, `openai_query`, `claude_query`, `gemini_query`, `multi_llm_query`, **`multi_llm_citation_check`**
 - **Google AI Overviews**: `aio_check`, `aio_citation_check`
-- **On-page**: `audit_page`, `audit_site`, `find_broken_external_links`
+- **On-page**: `audit_page`, `audit_site`, `find_broken_external_links`, `lint_schema_page`, `lint_schema_site`
 - **Link graph**: `internal_link_graph`, `suggest_internal_links`
 - **llms.txt**: `generate_llms_txt`, `validate_llms_txt`
 - **Trends**: `trend_init`, `trend_stats`, `snapshot_gsc`, `snapshot_llm_citations`, `snapshot_serp_aio`, `trend_gsc`, `trend_llm_citations`

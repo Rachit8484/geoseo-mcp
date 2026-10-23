@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://shop.example/#org",
+      "name": "Shop Example",
+      "url": "https://shop.example/",
+      "logo": "https://shop.example/logo.png"
+    },
+    {
+      "@type": "Product",
+      "name": "Trail Runner 2 Shoe",
+      "image": "https://shop.example/trail-runner-2.jpg",
+      "brand": {"@type": "Brand", "name": "Example"},
+      "sku": "TR2-42"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Shoes", "item": "https://shop.example/shoes"},
+        {"@type": "ListItem", "position": 2, "name": "Trail"},
+        {"@type": "ListItem", "position": 3, "name": "Trail Runner 2"}
+      ]
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Trail Runner 2 Shoe (bundle)",
+  "offers": {"@type": "Offer", "priceCurrency": "USD", "availability": "https://schema.org/InStock"},
+  "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.4"}
+}
+</script>
+</head><body></body></html>

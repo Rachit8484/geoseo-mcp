@@ -7,7 +7,7 @@ from typing import Any
 
 from fastmcp import FastMCP
 
-from ..audit import external_links, llms_txt, on_page
+from ..audit import external_links, llms_txt, on_page, schema_lint
 
 
 def register(mcp: FastMCP) -> None:
@@ -78,6 +78,43 @@ def register(mcp: FastMCP) -> None:
                 site_host=site_host, cache_ttl_s=cache_days * 86400,
                 include_ok=include_ok, max_urls=max_urls,
             )
+        except FileNotFoundError as e:
+            return {"error": str(e)}
+
+    @mcp.tool()
+    def lint_schema_page(source: str) -> dict[str, Any]:
+        """Validate a page's JSON-LD against Google's structured-data requirements.
+
+        ``source`` is a local HTML file or an http(s) URL. Every
+        ``application/ld+json`` block is parsed (``@graph`` included) and each
+        typed entity is checked against Google's documented required and
+        recommended properties for Article, Product (with nested Offer /
+        AggregateRating / Review), Recipe, LocalBusiness, BreadcrumbList, Event,
+        VideoObject, SoftwareApplication, JobPosting, QAPage, Review and
+        Organization. FAQPage and HowTo are checked against schema.org since
+        Google no longer shows those rich results.
+
+        Returns per-entity ``{type, ok, required_missing, recommended_missing,
+        line_estimate, doc}``. ``ok`` is false when a required property is
+        missing or the JSON is invalid.
+        """
+        try:
+            return schema_lint.lint(source)
+        except FileNotFoundError as e:
+            return {"error": str(e)}
+        except Exception as e:
+            return {"error": f"lint failed: {e}"}
+
+    @mcp.tool()
+    def lint_schema_site(folder: str, pattern: str = "*.html", limit: int = 500) -> dict[str, Any]:
+        """Run ``lint_schema_page`` over every HTML file in a folder.
+
+        Returns files with errors, files that have no JSON-LD at all, a count
+        of schema types found, the most common missing required properties,
+        and per-file problems.
+        """
+        try:
+            return schema_lint.lint_folder(folder, pattern=pattern, limit=limit)
         except FileNotFoundError as e:
             return {"error": str(e)}
 

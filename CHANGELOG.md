@@ -14,6 +14,7 @@
 - **Unlinked brand mentions**: `mention_rate` / `unlinked_mention_rate`, with aliases derived from the domain or passed via `brand_aliases`.
 - `server.json` for the official MCP Registry, plus the `mcp-name` marker in the README.
 - `find_broken_external_links`: broken outbound-link prospector for a folder of HTML. Concurrent HEAD/GET checks, results grouped by status class with source pages and suggested actions, 7-day SQLite cache. (#7)
+- `lint_schema_page` and `lint_schema_site`: JSON-LD linter for Google's structured-data requirements, with `@graph` support, nested Offer/AggregateRating/Review checks and per-site summaries. Rules live in `audit/_schema_rules.py`. (#5)
 - Mocked test suite for every LLM engine, citation logic, SerpAPI, CLI, toolsets and JS detection (no network in CI). CI now also runs on Python 3.13.
 
 ### Changed
